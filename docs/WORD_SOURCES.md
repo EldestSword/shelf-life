@@ -1,61 +1,85 @@
 # Word Vault editorial record
 
-49 curated seven-letter headwords, 22298 allowed guesses. Definitions and usage notes are original summaries. The broad CMUdict guess list includes names and US spellings; it never supplies targets automatically. No random inflections are used as padding for the target pool.
+93 defined seven-letter headwords and 22,300 allowed guesses ship offline. New puzzles draw from 40 familiar core words and 30 moderately difficult words; the deterministic selector uses the core pool four times in five. The remaining defined terms stay in the file so older saves remain valid, but are retired from new puzzles. Definitions and usage or etymology notes are original summaries.
 
-CMUdict source: https://github.com/cmusphinx/cmudict
+The broad guess list comes from [CMUdict](https://github.com/cmusphinx/cmudict) and includes names and US spellings. It never supplies targets automatically. Source SHA-256: `81917843c7f44ce2b094ac63873c2c7a4cf802040792c455ba3ca406891c3d22`. Rebuild with `python scripts/build-words.py /path/to/cmudict.dict`; the checked-in file is sufficient for normal development and offline play.
 
-Source SHA-256: `81917843c7f44ce2b094ac63873c2c7a4cf802040792c455ba3ca406891c3d22`
+## Active core pool
 
-Rebuild: `python scripts/build-words.py /path/to/cmudict.dict`. The checked-in words.js is sufficient for all normal development and offline play.
+- **ABRIDGE** — To shorten a text without losing its main sense.
+- **AFFABLE** — Friendly, approachable and easy to speak to.
+- **AMIABLE** — Pleasant and good-natured.
+- **AMNESTY** — An official pardon granted to a group of people.
+- **ANARCHY** — A state without effective government or recognised authority.
+- **ARCHIVE** — A collection of records preserved for their lasting value.
+- **BESPOKE** — Made for a particular customer or purpose.
+- **CANDOUR** — The quality of being open and honest.
+- **CAPRICE** — A sudden and unpredictable change of mind or mood.
+- **CLARITY** — The quality of being clear, coherent or easy to understand.
+- **CORSAIR** — A pirate or privateer, especially one operating in the Mediterranean.
+- **CYNICAL** — Distrustful of people’s motives or doubtful about sincerity.
+- **DECORUM** — Behaviour considered proper for a particular situation.
+- **DEFUNCT** — No longer existing, operating or in use.
+- **DYNAMIC** — Characterised by energy, activity or continuing change.
+- **EMPATHY** — The ability to understand and share another person’s feelings.
+- **ENTROPY** — A measure of disorder or unavailable energy in a system.
+- **EPITHET** — A descriptive word or phrase attached to a person or thing.
+- **EQUINOX** — Either of the two times each year when day and night are nearly equal.
+- **EXCERPT** — A short passage taken from a longer work.
+- **FURTIVE** — Attempting to avoid notice, usually because of guilt or caution.
+- **GARNISH** — To decorate or finish food with an additional ingredient.
+- **INFERNO** — A very large and fiercely burning fire.
+- **JOURNEY** — An act of travelling from one place to another.
+- **KINETIC** — Relating to motion.
+- **LACONIC** — Using very few words.
+- **MALAISE** — A general feeling of discomfort, unease or illness.
+- **NOMADIC** — Moving from place to place rather than remaining settled.
+- **PARABLE** — A short story used to illustrate a moral or spiritual lesson.
+- **PARADOX** — A statement or situation that appears contradictory but may reveal a truth.
+- **PENSIVE** — Deeply or quietly thoughtful.
+- **PHANTOM** — A ghost, apparition or something present only in appearance.
+- **PORTENT** — A sign or warning that something significant may happen.
+- **PRELUDE** — An introductory piece, event or action.
+- **QUARTET** — A group of four performers or a composition written for four parts.
+- **REQUIEM** — A musical composition or service for the dead.
+- **SUBTEXT** — An underlying meaning that is implied rather than stated.
+- **TACTILE** — Connected with touch or designed to be felt.
+- **VIBRANT** — Full of energy, colour or life.
+- **WISTFUL** — Showing quiet longing, often for something past or unattainable.
 
-Reference headwords (Merriam-Webster; researched 13 September 2026):
+## Active challenge pool
 
-- [ACERBIC](https://www.merriam-webster.com/dictionary/acerbic) — Sharp or biting in manner or taste.
-- [ACOLYTE](https://www.merriam-webster.com/dictionary/acolyte) — An attendant or devoted follower.
-- [ADIPOSE](https://www.merriam-webster.com/dictionary/adipose) — Consisting of, or relating to, fat.
-- [ANODYNE](https://www.merriam-webster.com/dictionary/anodyne) — Something that relieves pain; also, blandly inoffensive.
-- [APHESIS](https://www.merriam-webster.com/dictionary/aphesis) — Loss of an unstressed vowel at the beginning of a word.
-- [ATAVISM](https://www.merriam-webster.com/dictionary/atavism) — Reappearance of a characteristic associated with distant ancestors.
-- [AUTARKY](https://www.merriam-webster.com/dictionary/autarky) — Economic self-sufficiency, especially of a nation.
-- [BATHYAL](https://www.merriam-webster.com/dictionary/bathyal) — Relating to the ocean depths along the continental slope.
-- [BENTHIC](https://www.merriam-webster.com/dictionary/benthic) — Relating to the bottom of a body of water.
-- [BROMIDE](https://www.merriam-webster.com/dictionary/bromide) — A compound of bromine; figuratively, a tiresome commonplace.
-- [CADENZA](https://www.merriam-webster.com/dictionary/cadenza) — An elaborate solo passage, often near the end of a concerto movement.
-- [CAESURA](https://www.merriam-webster.com/dictionary/caesura) — A pause within a line of verse.
-- [CALUMNY](https://www.merriam-webster.com/dictionary/calumny) — A false statement made to damage someone’s reputation.
-- [CHIASMA](https://www.merriam-webster.com/dictionary/chiasma) — A crossing of structures, such as nerves or chromosomes.
-- [CHICANE](https://www.merriam-webster.com/dictionary/chicane) — A series of tight turns; also, deceptive trickery.
-- [CHIMERA](https://www.merriam-webster.com/dictionary/chimera) — An impossible fancy, or an organism containing genetically distinct tissues.
-- [COTERIE](https://www.merriam-webster.com/dictionary/coterie) — A small, exclusive group sharing interests.
-- [DEHISCE](https://www.merriam-webster.com/dictionary/dehisce) — To split open naturally along a line of weakness.
-- [DITTANY](https://www.merriam-webster.com/dictionary/dittany) — A name for several aromatic plants, including dittany of Crete.
-- [ECLOGUE](https://www.merriam-webster.com/dictionary/eclogue) — A short pastoral poem, often taking the form of dialogue.
-- [ELISION](https://www.merriam-webster.com/dictionary/elision) — Omission of a sound or syllable in speech.
-- [EPIGONE](https://www.merriam-webster.com/dictionary/epigone) — A follower whose work imitates a greater predecessor.
-- [ERGODIC](https://www.merriam-webster.com/dictionary/ergodic) — Having statistical behaviour in which time averages correspond to ensemble averages.
-- [FARRAGO](https://www.merriam-webster.com/dictionary/farrago) — A confused mixture of disparate things.
-- [FULVOUS](https://www.merriam-webster.com/dictionary/fulvous) — Dull yellowish brown; tawny.
-- [GIBBOUS](https://www.merriam-webster.com/dictionary/gibbous) — Convex or bulging; of the Moon, more than half illuminated.
-- [HAPLOID](https://www.merriam-webster.com/dictionary/haploid) — Having a single set of chromosomes.
-- [INCIPIT](https://www.merriam-webster.com/dictionary/incipit) — The opening words of a text or musical composition.
-- [INSCAPE](https://www.merriam-webster.com/dictionary/inscape) — The distinctive inner character or pattern of a thing.
-- [LAMBENT](https://www.merriam-webster.com/dictionary/lambent) — Glowing softly, or lightly playing over a surface.
-- [LIMINAL](https://www.merriam-webster.com/dictionary/liminal) — At a threshold or transitional boundary.
-- [LUCERNE](https://www.merriam-webster.com/dictionary/lucerne) — A forage plant also known as alfalfa.
-- [MORDANT](https://www.merriam-webster.com/dictionary/mordant) — Bitingly sharp in humour; also, a substance that fixes dye.
-- [OBLOQUY](https://www.merriam-webster.com/dictionary/obloquy) — Harsh public condemnation or disgrace.
-- [OCELLUS](https://www.merriam-webster.com/dictionary/ocellus) — A simple eye, or an eye-like marking.
-- [PALUDAL](https://www.merriam-webster.com/dictionary/paludal) — Relating to marshes or marshy ground.
-- [PERIGEE](https://www.merriam-webster.com/dictionary/perigee) — The point in an orbit nearest the Earth.
-- [PLEROMA](https://www.merriam-webster.com/dictionary/pleroma) — Fullness, especially the fullness of divine being in some theologies.
-- [PROLATE](https://www.merriam-webster.com/dictionary/prolate) — Elongated along the polar axis.
-- [PROTEAN](https://www.merriam-webster.com/dictionary/protean) — Able to change form readily; remarkably versatile.
-- [QUONDAM](https://www.merriam-webster.com/dictionary/quondam) — Former; belonging to an earlier time.
-- [RAVELIN](https://www.merriam-webster.com/dictionary/ravelin) — An outer defensive work, usually triangular, before a fortress.
-- [SAPIENT](https://www.merriam-webster.com/dictionary/sapient) — Wise or possessing discernment.
-- [TESSERA](https://www.merriam-webster.com/dictionary/tessera) — A small piece used in a mosaic.
-- [TRIREME](https://www.merriam-webster.com/dictionary/trireme) — An ancient galley with three tiers of oars.
-- [UMBRAGE](https://www.merriam-webster.com/dictionary/umbrage) — Offence or resentment.
-- [VELAMEN](https://www.merriam-webster.com/dictionary/velamen) — A spongy outer covering on certain aerial roots.
-- [VOLUBLE](https://www.merriam-webster.com/dictionary/voluble) — Speaking readily and at length.
-- [ZYMURGY](https://www.merriam-webster.com/dictionary/zymurgy) — The study or practice of fermentation.
+- **ACERBIC** — Sharp or biting in manner or taste.
+- **ACOLYTE** — An attendant or devoted follower.
+- **ADIPOSE** — Consisting of, or relating to, fat.
+- **ANODYNE** — Something that relieves pain; also, blandly inoffensive.
+- **ATAVISM** — Reappearance of a characteristic associated with distant ancestors.
+- **BROMIDE** — A compound of bromine; figuratively, a tiresome commonplace.
+- **BUCOLIC** — Relating to an idealised rural life or countryside.
+- **CADENZA** — An elaborate solo passage, often near the end of a concerto movement.
+- **CAESURA** — A pause within a line of verse.
+- **CALUMNY** — A false statement made to damage someone’s reputation.
+- **CHICANE** — A series of tight turns; also, deceptive trickery.
+- **CHIMERA** — An impossible fancy, or an organism containing genetically distinct tissues.
+- **COTERIE** — A small, exclusive group sharing interests.
+- **ELISION** — Omission of a sound or syllable in speech.
+- **EUPHONY** — A pleasing or harmonious combination of sounds.
+- **FARRAGO** — A confused mixture of disparate things.
+- **GIBBOUS** — Convex or bulging; of the Moon, more than half illuminated.
+- **HALCYON** — Calm, peaceful and often remembered as especially happy.
+- **HAPLOID** — Having a single set of chromosomes.
+- **LAMBENT** — Glowing softly, or lightly playing over a surface.
+- **LIMINAL** — At a threshold or transitional boundary.
+- **MORDANT** — Bitingly sharp in humour; also, a substance that fixes dye.
+- **PERIGEE** — The point in an orbit nearest the Earth.
+- **PROTEAN** — Able to change form readily; remarkably versatile.
+- **RISIBLE** — Deserving to be laughed at; ridiculous.
+- **SAPIENT** — Wise or possessing discernment.
+- **TESSERA** — A small piece used in a mosaic.
+- **TRIREME** — An ancient galley with three tiers of oars.
+- **UMBRAGE** — Offence or resentment.
+- **VOLUBLE** — Speaking readily and at length.
+
+## Editorial rules
+
+Targets must be legitimate seven-letter English words with a confident definition and a useful usage or etymology note. Proper nouns, abbreviations, arbitrary inflections and specialist terms at the level of PLEROMA are excluded from active selection. Retired targets remain defined solely for save compatibility.

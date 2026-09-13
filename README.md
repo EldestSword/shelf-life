@@ -1,6 +1,6 @@
 # Shelf Life: Lou's Library
 
-A portrait-first mobile browser game made for Lou. It combines a merge board, visible library upgrades, properly researched cheese dishes and a deliberately difficult dual-word puzzle.
+A portrait-first mobile browser game made for Lou. It combines a merge board, visible library upgrades, properly researched cheese dishes and a focused daily word puzzle.
 
 The launch build is a static web app. It has no accounts, adverts, purchases, analytics, remote image assets or energy timers. Progress is stored in the browser and can be exported as a JSON backup.
 
@@ -8,10 +8,11 @@ The launch build is a static web app. It has no accounts, adverts, purchases, an
 
 - A 5 × 4 merge board with six subject collections and exact section-and-tier merging.
 - Twelve recurring visitors with preferences and short story progression.
-- Ten cheese dishes assembled from two to seven separately represented, researched components.
+- Twenty-four cheese dishes assembled from two to seven separately represented, researched components.
 - Sixteen library upgrades that alter the room and improve progression, including a bindery, catalogue and record-listening alcove.
-- The Word Vault: 49 curated seven-letter targets, 22,298 offline guesses, nine shared guesses, correct repeated-letter scoring, and definitions and usage notes after completion.
-- Three teal and sea-green room palettes, eight milestones, daily jobs without a streak penalty, offline caching and save import/export.
+- The Word Vault: one seven-letter target, six guesses, a 40-word familiar core pool, a 30-word challenge pool, 22,300 offline guesses, correct repeated-letter scoring, and definitions and usage notes after completion.
+- A full progression economy: visitor funds buy book arrivals, pantry stock, recipe research, four new genres and sixteen visible room improvements.
+- A four-step playable tutorial, three teal and sea-green room palettes, eight milestones, daily jobs without a streak penalty, offline caching and save import/export.
 - Original cel-shaded vector artwork for Lou, visitors, objects and the library. Lou has a loose brown bun, tortoiseshell glasses, four expressions and a stylised likeness; the reference photograph is not stored in this repository.
 
 There are no coffee mugs and no inspirational wall slogans. This is enforced partly by taste and partly by `npm run check`.
@@ -26,7 +27,7 @@ npm run dev
 
 Open `http://127.0.0.1:4173` on a computer or phone connected to the same development environment.
 
-There is no dependency installation step for normal development. Browser testing needs the pinned Python dependencies above. The game uses browser JavaScript, CSS and SVG.
+There is no dependency installation step for normal development. Browser testing needs the pinned Python dependencies above. The game uses browser JavaScript, CSS and SVG. Atkinson Hyperlegible and Fraunces are bundled locally under the SIL Open Font License.
 
 ## Test it
 
@@ -67,7 +68,8 @@ public/
   manifest.webmanifest       Installable web-app metadata
   sw.js                      Offline cache
   assets/icon.svg            Teal vector app icon
-  data/words.js              Allowed guesses, hard answers and definitions
+  assets/fonts/              Local Atkinson and Fraunces web fonts
+  data/words.js              Allowed guesses, active pools and definitions
   data/WORDLIST-LICENCE.txt  Word-list attribution
   src/content.js             Recipes, visitors, upgrades and milestones
   src/engine.js              Pure rules and progression
@@ -107,4 +109,4 @@ The handover renderer and engine remain the foundation. The current progression 
 
 See [architecture](docs/ARCHITECTURE.md), [game design](docs/GAME_DESIGN.md), [cheese research](docs/CHEESE_SOURCES.md), [word provenance](docs/WORD_SOURCES.md) and [verification](docs/VERIFICATION.md).
 
-Offline use needs one successful visit on HTTPS or localhost. This release has a finite target pool, so pairs can recur. The broader guess list contains some proper names and US variants; those do not become targets. Browsers without Web Locks retain best-effort stale-save detection. No live Netlify site is required for local play.
+Offline use needs one successful visit on HTTPS or localhost. This release has a finite target pool, so words can recur. The broader guess list contains some proper names and US variants; those do not become targets. Browsers without Web Locks retain best-effort stale-save detection. No live Netlify site is required for local play.

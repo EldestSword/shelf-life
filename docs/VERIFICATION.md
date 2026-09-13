@@ -2,47 +2,46 @@
 
 ## Build and rules
 
-- `npm run check`: passed. JavaScript syntax, stable IDs, ten recipes spanning two to seven components, six book sections, 49 target definitions, 22,298 allowed guesses, banned material and absence of unintended remote runtime URLs.
-- `npm test`: 30 tests passed. Exact section-and-tier book merges, rejected cross-section merges, complete multi-component preparation in both orders, mismatched and duplicate ingredient rejection, capacity recovery, requests, reward arithmetic, sixteen upgrades, seeded donations, daily jobs, milestones, version-one migration, save preservation and rejection, export/import, corruption recovery, quota failure and stale writers.
-- Duplicate-letter scoring includes explicit examples and 2,401 generated guess/target cases checking multiplicity and exact-position invariants.
-- The legal-action campaign test reaches all sixteen upgrades and discovers all ten preparations with its fixed seed. It uses chosen-section donations, actual merges, two-to-seven-component pantry deliveries, returns, service and purchases; it never assigns funds or high-tier books directly.
-- `npx --yes netlify-cli build --offline`: passed using the repository’s `netlify.toml`, production context and configured build command. This is a local Netlify build, not a published deployment.
-- `npm run package`: passed. The resulting ZIP was opened and checked for archive integrity, application/test files and exclusion of test results and the original photograph.
+- `npm run check`: passed. JavaScript syntax, stable IDs, 24 recipes spanning two to seven components, six book sections, 93 target definitions, 22,300 allowed guesses, both active target pools, local font files and licences, banned material, and absence of unintended remote runtime URLs.
+- `npm test`: 32 tests passed. Coverage includes exact and rejected book merges, paid random and subject-specific arrivals, section purchases, recipe research, paid pantry stock, all 24 preparations in both assembly orders, mismatched and duplicate components, requests, rewards, sixteen upgrades, daily jobs, milestones, save migration and validation, export/import, corruption recovery, quota failures and stale writers.
+- Duplicate-letter scoring includes explicit repeated-letter examples and 2,401 generated guess/target cases. Single-word wins, partial attempts, six-guess losses, deterministic daily selection, the 80/20 core/challenge split and retired dual-puzzle save migration are covered.
+- The legal-action campaign reaches all sixteen upgrades, all 24 recipes and all six collections. It buys books and pantry stock, researches recipes, opens collections, merges, returns and serves; it does not assign funds or high-tier books directly.
+- `npx --yes netlify-cli build --offline`: passed with Netlify CLI 36.4.8 using the production context and the checked-in `netlify.toml`.
+- `npm run package`: passed. The final archive is checked for integrity after staging so it includes the new local fonts and active target-pool file.
 - `git diff --check`: passed.
 
 ## Browser acceptance
 
-`npm run test:browser` passed **866 assertions** in the final combined run. Chromium and WebKit were exercised at **320 × 667** and **390 × 844** using Playwright 1.62.0 on Windows. The suite checks document dimensions, button bounds and content clipping independently; hidden overflow alone cannot satisfy it.
+`npm run test:browser` passed **1,048 assertions** across Chromium and WebKit at **320 × 667** and **390 × 844**. These are real browser engines with emulated phone viewports. The suite independently checks document dimensions, active-control bounds and selected content clipping on Play, Library, Word Vault and Journal.
 
-The runs cover all four main screens, ten recipe entries and their ingredient/source tabs, six catalogue sections, twelve visitor entries, milestone pages and all sixteen upgrade cards. They perform tap, drag and keyboard merges, undo, subject-chosen acquisitions, a complete seven-component Welsh rarebit preparation, visitor service, pantry deliveries, palette changes, daily and milestone claims, word wins and losses, practice replacement, settings and backup flows. Full upgrade coverage uses an explicitly imported late-game fixture; the rules campaign above separately proves economic reachability.
+The runs cover the playable four-step tutorial, paid random and exact book orders, the 24-entry pantry, every recipe information and source tab, a complete seven-component preparation, six catalogue sections, twelve regulars, all milestone pages and all sixteen upgrades. They perform tap, drag and keyboard merges, undo, visitor service, daily and milestone claims, a single-word win and six-guess loss, practice replacement, settings, and palette changes. The bundled Atkinson and Fraunces fonts are loaded and checked in every browser/viewport combination.
 
-Exported downloads are read from disk, imported through the file picker and compared with the full original state. Reloading preserves that state. Invalid imports leave it untouched. Two tabs issue competing actions and converge on identical progress.
+Exported saves are downloaded, read from disk, reimported and compared with the complete pre-export state. Invalid imports leave progress untouched. Reloading preserves the current state, and competing actions from two tabs converge. The worker registers on first load, caches the complete shell including fonts, and reloads offline. Chromium is tested with browser networking disabled; WebKit is tested with the local server stopped because its Windows offline switch fails before service-worker dispatch.
 
-The worker registers on first load and caches all twelve shell entries. Chromium is reloaded with browser networking disabled. WebKit is reloaded while the actual local server is stopped, then traverses all four screens from cache. WebKit’s `set_offline` switch returned an internal browser error in this environment before worker handling; a real server outage provides the working offline test instead. Playwright documents limitations to its service-worker tooling in [the official guide](https://playwright.dev/docs/service-workers).
-
-The isolated acceptance runs record no application console errors and no remote runtime requests. An additional Chromium browser check exercised destructive reset, raw corrupt-save export, previous-save recovery, recovery without a backup, and confirmed high-tier return followed by undo.
-
-Screenshots are generated from actual browser renders and compared with the supplied references, which remain outside the repository. The repeatable suite writes the screenshot set and assertion report to the ignored `test-results/` directory.
+The final isolated runs record no application console errors and no unintended remote runtime requests. Screenshots from each actual browser render are copied to `docs/screenshots/`; disposable output and save backups remain ignored under `test-results/`.
 
 ## Visual comparison
 
-| Supplied reference | Result |
+| Supplied reference | Final result |
 |---|---|
-| `01-play-screen.png` | Retained dark library scene, paged request above a complete 5 × 4 board, muted gold outlines, compact action strip, two delivery controls and fixed navigation. Teal now leads the palette; books show subject marks and partial dishes show component progress. |
-| `02-screen-montage.png` | Retained welcome, Library, two side-by-side nine-row word grids with on-screen keyboard, and the paged Journal. Added a six-section Book Catalogue, multi-component preparation views and source-backed ingredient information. |
-| `03-library-v2.png` | Retained the room, chapter progress, single upgrade card and page controls; reduced unused space. |
-| `04-library-v3.png` | Retained compact room/upgrade hierarchy and four progression statistics. The room is furnished from the start, and all sixteen purchases add visible objects including a turntable, catalogue, bindery and periodicals gallery. |
+| `01-play-screen.png` | Retains the dark library scene, paged visitor request, complete 5 × 4 board, compact action strip, muted gold detail and fixed navigation. Teal now leads the palette, section marks clarify books, and purchasing replaces unlimited free supply. |
+| `02-screen-montage.png` | Retains the welcome, Library, keyboard-led Vault and paged Journal composition. The Vault now uses one large six-row board; the Journal and pantry cover 24 sourced preparations. |
+| `03-library-v2.png` | Retains the room, chapter progress, single focused improvement card and page controls. The local Fraunces/Atkinson pairing creates a clearer hierarchy. |
+| `04-library-v3.png` | Retains the compact room and four progression statistics. All sixteen purchases add visible objects, including the listening alcove, catalogue, bindery and periodicals gallery. |
 
-The coarse reference Lou was deliberately not copied. The replacement is a smooth cel-shaded SVG with a 160 × 200 viewBox, rendered at 144 × 180 CSS pixels in the 390 × 844 Library screen and 76 × 95 in Play. Actual phone-size renders show her layered brown hair, loose bun, amber-flecked tortoiseshell frames, striped top, teal overshirt and four distinct expressions. Her celebration changes the full pose, not just the mouth. Paint IDs are scoped per instance, and the hidden-screen regression found during visual QA is fixed. The photograph is neither shipped nor committed.
+Lou remains a smooth 160 × 200 cel-shaded SVG and is rendered at 144 × 180 CSS pixels in the 390 × 844 Library screen. Phone-size screenshots show her loose brown bun, tortoiseshell glasses, face, striped top, teal overshirt and four distinct expressions. The supplied photograph is neither shipped nor committed.
 
 ## Practical limits
 
-These are real browser engines with emulated phone viewports, not physical iPhone or Android device tests. Native home-screen installation has not been tested. Offline play needs one successful initial visit. Target pairs can recur within the finite 49-word pool. The broad guess dictionary accepts some proper names and US variants; targets are separately curated. Older browsers without Web Locks have best-effort stale-write detection. No live Netlify deployment was performed.
+The browser tests emulate phone viewports; they do not constitute testing on physical iPhone or Android hardware. Native home-screen installation has not been exercised. Offline play requires one successful initial HTTPS or localhost visit. The active word pool is finite, so words can recur. The broad guess dictionary deliberately accepts some proper names and US variants, while the target pools do not. Browsers without Web Locks retain best-effort stale-save detection. No live Netlify production deployment was performed.
 
-## Commands used
+## Commands run
 
-Development and preparation: `npm run dev`; `python -m pip install playwright`; `python -m playwright install chromium`; `python -m playwright install webkit`; `python scripts/build-words.py <local-cmudict.dict>`.
-
-Verification: `npm run check`; `npm test`; `npm run test:browser`; a targeted WebKit run using `SHELF_TEST_ENGINES=webkit`; `npx --yes netlify-cli build --offline`; `npm run package`; `git diff --check`. Local Python/Node inspection scripts additionally checked screenshot rendering, ZIP contents, Netlify TOML, recovery controls and the offline test harness. Early failed checks were corrected before the final acceptance run.
-
-Repository operations: `git switch -c codex/complete-shelf-life`, logical `git add` / `git commit` steps and `git push -u origin codex/complete-shelf-life`. Pull-request creation uses the authenticated GitHub connector.
+- `npm run check`
+- `npm test`
+- `npm run test:browser`
+- targeted Chromium and WebKit browser runs using `SHELF_TEST_ENGINES`
+- `npx --yes netlify-cli build --offline`
+- `npm run package`
+- ZIP integrity and contents check
+- `git diff --check`

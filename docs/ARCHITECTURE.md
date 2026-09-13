@@ -4,11 +4,11 @@ The recovered `app.js` and `engine.js` are the foundation. The first implementat
 
 ## Runtime
 
-`index.html` loads content, words, engine, storage, art and app in that order using deferred classic scripts. There is no bundler or framework. The app renders four sections, using event delegation and native buttons. A native dialog provides modal focus trapping. Only the visible screen is rendered on demand.
+`index.html` loads content, words, engine, storage, art and app in that order using deferred classic scripts. There is no bundler or framework. The app renders four sections, using event delegation and native buttons. A native dialog provides modal focus trapping. Only the visible screen is rendered on demand. The first-run coach overlays the real controls and advances from successful engine actions, so it cannot claim a step was completed when the underlying action failed.
 
-`content.js` is the immutable editorial catalogue. It defines six book sections, component-level recipes, twelve visitors and sixteen room upgrades. `engine.js` exposes deterministic section-and-tier merging, staged recipe assembly, request, reward, upgrade, daily-job and puzzle functions. Randomness uses the recovered seeded generator. Daily puzzle selection hashes the local calendar date with the fixed `ShelfLife.daily.v1.` prefix. Changing the target order changes daily answers, so preserve it for this release.
+`content.js` is the immutable editorial catalogue. It defines six book sections, component-level recipes, twelve visitors and sixteen room upgrades. `engine.js` exposes deterministic section-and-tier merging, staged recipe assembly, request, purchasing, unlock, reward, upgrade, daily-job and puzzle functions. Randomness uses the recovered seeded generator. Daily puzzle selection hashes the local calendar date with the fixed `ShelfLife.daily.v2.` prefix. It chooses a single word from the bundled core or challenge pool with a deterministic 80/20 weighting.
 
-`art.js` draws original cel-shaded SVG. Lou uses a 160 × 200 viewBox with curved silhouettes, layered hair and skin shading, tortoiseshell frames, a striped top, teal overshirt and separate idle, pleased, unimpressed and celebratory faces. Paint identifiers are scoped per render so hidden screens cannot break gradients. The room is a layered SVG with one visible addition per upgrade. Books retain section colours and marks; recipe components use distinct ingredient drawings and partial dishes show their assembly progress.
+`art.js` draws original cel-shaded SVG. Lou uses a 160 × 200 viewBox with curved silhouettes, layered hair and skin shading, tortoiseshell frames, a striped top, teal overshirt and separate idle, pleased, unimpressed and celebratory faces. Paint identifiers are scoped per render so hidden screens cannot break gradients. The room is a layered SVG with one visible addition per upgrade. Books retain section colours and marks; 35 ingredient kinds use distinct drawings and partial dishes show their assembly progress.
 
 ## Saves
 
@@ -22,7 +22,7 @@ Web Locks serialise mutations across tabs on supported browsers. Under the lock,
 
 ## Offline and updates
 
-The service worker caches a complete versioned shell on installation. It serves that shell coherently from cache, including the dictionary and attribution. Activation deletes older Shelf Life caches only. Updates wait until the player selects Save & reload in Settings. Offline use requires a successful initial visit on HTTPS or localhost. Recipe references open only after an explicit link activation.
+The service worker caches a complete versioned shell on installation, including the three locally bundled web-font files and their licences. It serves that shell coherently from cache, including the dictionary and attribution. Activation deletes older Shelf Life caches only. Updates wait until the player selects Save & reload in Settings. Offline use requires a successful initial visit on HTTPS or localhost. Recipe references open only after an explicit link activation.
 
 ## Verification and deployment
 
