@@ -110,6 +110,7 @@ try:
                 # Malformed imports leave the library unchanged.
                 act(page,'settings');act(page,'backup')
                 page.locator('#import-file').set_input_files({'name':'invalid.json','mimeType':'application/json','buffer':b'{broken'})
+                page.get_by_text('That save could not be opened').wait_for()
                 expect(page.get_by_text('That save could not be opened').is_visible(),'Missing import error')
                 expect(snap(page)==before,'Bad import overwrote state');close(page)
                 # Touch pantry and every recipe page; long content stays within the modal.
