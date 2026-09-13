@@ -61,7 +61,7 @@ function validate(x){
  if(!Array.isArray(x.requests)||x.requests.length!==3||!x.requests.every(r=>r&&Number.isInteger(r.visitor)&&r.visitor>=0&&r.visitor<C.visitors.length&&Number.isInteger(r.tier)&&r.tier>=1&&r.tier<=MAX_TIER&&(!r.section||section(r.section))&&(r.recipe===null||recipe(r.recipe))&&Number.isSafeInteger(r.serial)&&r.serial>=0))throw Error('The visitor requests are invalid.');
  s.requests=x.requests.map(r=>({visitor:r.visitor,tier:r.tier,section:section(r.section)?r.section:(C.visitors[r.visitor].sections[0]||'fiction'),recipe:r.recipe,serial:r.serial}));
  if(!Array.isArray(x.visits)||![8,C.visitors.length].includes(x.visits.length)||!x.visits.every(v=>Number.isSafeInteger(v)&&v>=0&&v<=100000000))throw Error('The visitor record is invalid.');s.visits=Array.from({length:C.visitors.length},(_,i)=>x.visits[i]||0);
- if(!x.daily||!/^\d{4}-\d{2}-\d{2}$/.test(x.daily.date)||!Number.isSafeInteger(x.daily.served)||x.daily.served<0||x.daily.served>100000000)throw Error('The daily record is invalid.');s.daily={date:x.daily.date,served:x.daily.served,claimed:!!x.daily.claimed};
+ if(!x.daily||!/^\d{4}-\d{2}-\d{2}$/.test(x.daily.date)||!Number.isSafeInteger(x.daily.served)||x.daily.served<0||x.daily.served>100000000||typeof x.daily.claimed!=='boolean')throw Error('The daily record is invalid.');s.daily={date:x.daily.date,served:x.daily.served,claimed:x.daily.claimed};
  s.dailyPuzzle=validatePuzzle(x.dailyPuzzle);s.practicePuzzle=validatePuzzle(x.practicePuzzle);
  s.started=!!x.started;s.seenEnding=!!x.seenEnding&&x.upgrades.length===C.upgrades.length;
  const themeMap={sage:'teal',rose:'sea-glass',twilight:'midnight',teal:'teal','sea-glass':'sea-glass',midnight:'midnight'};s.theme=themeMap[x.theme]||'teal';
