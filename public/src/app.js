@@ -149,6 +149,7 @@
     return `<button class="need ${ready ? 'ready' : ''}" data-action="need-info" data-kind="${item.kind}" data-id="${item.id || ''}" data-tier="${item.tier || ''}" aria-label="Need ${escape(labelOf(item))}. ${ready ? 'Ready to serve' : 'Not ready'}">${A.item(item)}<span>${escape(nameOf(item))}<small>${ready ? 'Ready' : item.kind === 'book' ? 'Level ' + item.tier : 'Prepare dish'}</small></span>${ready ? '<i class="check-badge">' + A.icon('check') + '</i>' : ''}</button>`;
   }
   function renderPlay() {
+    const focusedTile = document.activeElement?.matches('.tile') ? document.activeElement.dataset.index : null;
     const q = state.requests[requestIndex];
     const v = C.visitors[q.visitor];
     const line = v.lines[Math.min(v.lines.length - 1, Math.floor(state.visits[q.visitor] / 3))];
@@ -169,6 +170,7 @@
       <div class="selection-bar">${selectedItem ? `<span class="selection-name">${escape(nameOf(selectedItem))}</span><button data-action="selected-info" aria-label="Selected item details">${A.icon('info')}</button><button data-action="swap" aria-label="${swapMode ? 'Cancel swap mode' : 'Move or swap this item'}" aria-pressed="${swapMode}">${A.icon('swap')}</button><button data-action="return-item" aria-label="Return selected item">${A.icon('back')}</button>` : `<span>${undoState ? 'Board changed. Undo is available.' : 'Select matching books or recipe components.'}</span>`}${undoState ? `<button data-action="undo" aria-label="Undo last board action">Undo</button>` : ''}${!selectedItem ? '<button class="board-help" data-action="help" aria-label="How to play">' + A.icon('help') + '</button>' : ''}</div>
       <div class="deliveries"><button class="delivery-button books" data-action="deliver-book">${A.book(2)}<span><strong>Book donations</strong><small>Tap for a delivery</small></span></button><button class="delivery-button food" data-action="pantry">${A.icon('cheese')}<span><strong>The cheese pantry</strong><small>Choose a proper pairing</small></span></button></div>`;
     popCell = -1;
+    if(focusedTile!==null) document.querySelector(`.tile[data-index="${focusedTile}"]`)?.focus({preventScroll:true});
   }
   function renderLibrary() {
     const u = C.upgrades[upgradeIndex];
