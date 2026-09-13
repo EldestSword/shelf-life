@@ -1,6 +1,8 @@
 /* Pure game rules. No DOM, network calls or clocks hidden in this module. */
 (function(root){'use strict';
 const C=typeof module!=='undefined'&&module.exports?require('./content.js'):root.SHELF_CONTENT;
+const W=typeof module!=='undefined'&&module.exports?require('../data/words.js'):root.SHELF_WORDS;
+const allowedWords=new Set(W.allowed.split(' '));
 const MAX_TIER=6, SIZE=20, VERSION=1;
 const recipe=id=>C.recipes.find(r=>r.id===id);
 const copy=o=>JSON.parse(JSON.stringify(o));
@@ -13,10 +15,10 @@ function fresh(seed=839021,day=dateKey()){
 }
 function validItem(i){return i===null||!!(i&&typeof i==='object'&&((i.kind==='book'&&Number.isInteger(i.tier)&&i.tier>=1&&i.tier<=MAX_TIER)||(['cheese','prep','dish'].includes(i.kind)&&recipe(i.id))));}
 function normalItem(i){return i===null?null:i.kind==='book'?{kind:'book',tier:i.tier}:{kind:i.kind,id:i.id};}
-function validatePuzzle(p){if(p===null)return null;if(!p||!Array.isArray(p.targets)||p.targets.length!==2||!p.targets.every(x=>/^[A-Z]{7}$/.test(x))||p.targets[0]===p.targets[1]||!Array.isArray(p.guesses)||p.guesses.length>9||!p.guesses.every(x=>/^[A-Z]{7}$/.test(x))||new Set(p.guesses).size!==p.guesses.length||typeof p.rewarded!=='boolean')throw Error('The word puzzle in this save is not valid.');return {targets:p.targets.slice(),guesses:p.guesses.slice(),rewarded:p.rewarded,date:typeof p.date==='string'?p.date:'practice',input:typeof p.input==='string'&&/^[A-Z]{0,7}$/.test(p.input)?p.input:''};}
+function validatePuzzle(p){if(p===null)return null;if(!p||!Array.isArray(p.targets)||p.targets.length!==2||!p.targets.every(x=>W.answers.includes(x))||p.targets[0]===p.targets[1]||!Array.isArray(p.guesses)||p.guesses.length>9||!p.guesses.every(x=>allowedWords.has(x))||new Set(p.guesses).size!==p.guesses.length||typeof p.rewarded!=='boolean'||typeof p.date!=='string'||!(p.date==='practice'||/^\d{4}-\d{2}-\d{2}$/.test(p.date))||typeof p.input!=='string'||!/^[A-Z]{0,7}$/.test(p.input))throw Error('The word puzzle in this save is not valid.');const status=puzzleStatus(p);if(p.rewarded!==status.done||p.guesses.some((_,i)=>i<p.guesses.length-1&&p.targets.every(t=>p.guesses.slice(0,i+1).includes(t))))throw Error('The puzzle completion record is inconsistent.');return {targets:p.targets.slice(),guesses:p.guesses.slice(),rewarded:p.rewarded,date:p.date,input:p.input};}
 function validate(x){
  if(!x||x.version!==VERSION||!Array.isArray(x.board)||x.board.length!==SIZE||!x.board.every(validItem))throw Error('That is not a valid Shelf Life save.');
- const s=fresh();
+ const s=fresh();s.board=x.board.map(normalItem);
  for(const k of ['funds','xp','served','merges','dishes','puzzles','orderIndex','practiceCount']){if(!Number.isSafeInteger(x[k])||x[k]<0||x[k]>100000000)throw Error('The save contains invalid progress.');s[k]=x[k];}
  if(!Number.isInteger(x.seed)||x.seed<0||x.seed>4294967295)throw Error('The save seed is invalid.');s.seed=x.seed;
  for(const [key,allowed] of [['upgrades',C.upgrades.map(u=>u.id)],['discovered',C.recipes.map(r=>r.id)],['claimed',C.achievements.map(a=>a.id)]]){if(!Array.isArray(x[key])||x[key].some(v=>!allowed.includes(v))||new Set(x[key]).size!==x[key].length)throw Error('The save has an unknown collection.');s[key]=x[key].slice();}
