@@ -2,19 +2,19 @@
 
 ## Build and rules
 
-- `npm run check`: passed. JavaScript syntax, stable IDs, recipe research metadata, 49 target definitions, 22,298 allowed guesses, banned material and absence of unintended remote runtime URLs.
-- `npm test`: 29 tests passed. Exact and rejected merges, all ten recipe combinations in both orders, capacity recovery, requests, reward arithmetic, upgrades, seeded donations, daily jobs, milestones, save preservation and rejection, export/import, corruption recovery, quota failure and stale writers.
+- `npm run check`: passed. JavaScript syntax, stable IDs, ten recipes spanning two to seven components, six book sections, 49 target definitions, 22,298 allowed guesses, banned material and absence of unintended remote runtime URLs.
+- `npm test`: 30 tests passed. Exact section-and-tier book merges, rejected cross-section merges, complete multi-component preparation in both orders, mismatched and duplicate ingredient rejection, capacity recovery, requests, reward arithmetic, sixteen upgrades, seeded donations, daily jobs, milestones, version-one migration, save preservation and rejection, export/import, corruption recovery, quota failure and stale writers.
 - Duplicate-letter scoring includes explicit examples and 2,401 generated guess/target cases checking multiplicity and exact-position invariants.
-- The legal-action campaign test reaches all twelve upgrades and discovers all ten preparations after 52 requests with its fixed seed. It uses free donations, actual merges, pantry deliveries, returns, service and purchases; it never assigns funds or high-tier books directly.
+- The legal-action campaign test reaches all sixteen upgrades and discovers all ten preparations with its fixed seed. It uses chosen-section donations, actual merges, two-to-seven-component pantry deliveries, returns, service and purchases; it never assigns funds or high-tier books directly.
 - `npx --yes netlify-cli build --offline`: passed using the repository’s `netlify.toml`, production context and configured build command. This is a local Netlify build, not a published deployment.
 - `npm run package`: passed. The resulting ZIP was opened and checked for archive integrity, application/test files and exclusion of test results and the original photograph.
 - `git diff --check`: passed.
 
 ## Browser acceptance
 
-`npm run test:browser` passed **686 assertions** in the final combined run. Chromium and WebKit were exercised at **320 × 667** and **390 × 844** using Playwright 1.62.0 on Windows. The suite checks document dimensions, button bounds and content clipping independently; hidden overflow alone cannot satisfy it.
+`npm run test:browser` passed **866 assertions** in the final combined run. Chromium and WebKit were exercised at **320 × 667** and **390 × 844** using Playwright 1.62.0 on Windows. The suite checks document dimensions, button bounds and content clipping independently; hidden overflow alone cannot satisfy it.
 
-The runs cover all four main screens, ten recipe entries and their ingredient/source tabs, eight visitor entries, milestone pages and all twelve upgrade cards. They perform tap, drag and keyboard merges, undo, cheese preparation, visitor service, pantry deliveries, palette changes, daily and milestone claims, word wins and losses, practice replacement, settings and backup flows. Full upgrade coverage uses an explicitly imported late-game fixture; the rules campaign above separately proves economic reachability.
+The runs cover all four main screens, ten recipe entries and their ingredient/source tabs, six catalogue sections, twelve visitor entries, milestone pages and all sixteen upgrade cards. They perform tap, drag and keyboard merges, undo, subject-chosen acquisitions, a complete seven-component Welsh rarebit preparation, visitor service, pantry deliveries, palette changes, daily and milestone claims, word wins and losses, practice replacement, settings and backup flows. Full upgrade coverage uses an explicitly imported late-game fixture; the rules campaign above separately proves economic reachability.
 
 Exported downloads are read from disk, imported through the file picker and compared with the full original state. Reloading preserves that state. Invalid imports leave it untouched. Two tabs issue competing actions and converge on identical progress.
 
@@ -22,18 +22,18 @@ The worker registers on first load and caches all twelve shell entries. Chromium
 
 The isolated acceptance runs record no application console errors and no remote runtime requests. An additional Chromium browser check exercised destructive reset, raw corrupt-save export, previous-save recovery, recovery without a backup, and confirmed high-tier return followed by undo.
 
-Screenshots in `screenshots/` are generated from actual browser renders. They are compared with the supplied references, which remain outside the repository. The repeatable suite writes its larger screenshot set and assertion report to the ignored `test-results/` directory.
+Screenshots are generated from actual browser renders and compared with the supplied references, which remain outside the repository. The repeatable suite writes the screenshot set and assertion report to the ignored `test-results/` directory.
 
 ## Visual comparison
 
 | Supplied reference | Result |
 |---|---|
-| `01-play-screen.png` | Retained dark library scene, paged request above a complete 5 × 4 board, muted gold outlines, compact action strip, two delivery controls and fixed navigation. |
-| `02-screen-montage.png` | Retained welcome, Library, two side-by-side nine-row word grids with on-screen keyboard, and the paged Journal. Added the missing definitions and authored preparation information. |
+| `01-play-screen.png` | Retained dark library scene, paged request above a complete 5 × 4 board, muted gold outlines, compact action strip, two delivery controls and fixed navigation. Teal now leads the palette; books show subject marks and partial dishes show component progress. |
+| `02-screen-montage.png` | Retained welcome, Library, two side-by-side nine-row word grids with on-screen keyboard, and the paged Journal. Added a six-section Book Catalogue, multi-component preparation views and source-backed ingredient information. |
 | `03-library-v2.png` | Retained the room, chapter progress, single upgrade card and page controls; reduced unused space. |
-| `04-library-v3.png` | Retained compact room/upgrade hierarchy and four progression statistics. The room is furnished from the start, and all twelve purchases add visible objects. |
+| `04-library-v3.png` | Retained compact room/upgrade hierarchy and four progression statistics. The room is furnished from the start, and all sixteen purchases add visible objects including a turntable, catalogue, bindery and periodicals gallery. |
 
-The coarse reference Lou was deliberately not copied. The replacement is a 64 × 80 logical-pixel figure, rendered at 128 × 160 CSS pixels in the 390 × 844 Library screen and 64 × 80 in the compact screen and Play scene. Actual phone-size renders show her brown bun, amber-flecked glasses and four distinct expressions. Pixels remain crisp at integer scaling. The photograph is neither shipped nor committed. Visitors, books, cheeses and room objects use the same integer-cluster technique.
+The coarse reference Lou was deliberately not copied. The replacement is a smooth cel-shaded SVG with a 160 × 200 viewBox, rendered at 144 × 180 CSS pixels in the 390 × 844 Library screen and 76 × 95 in Play. Actual phone-size renders show her layered brown hair, loose bun, amber-flecked tortoiseshell frames, striped top, teal overshirt and four distinct expressions. Her celebration changes the full pose, not just the mouth. Paint IDs are scoped per instance, and the hidden-screen regression found during visual QA is fixed. The photograph is neither shipped nor committed.
 
 ## Practical limits
 

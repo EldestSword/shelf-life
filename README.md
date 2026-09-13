@@ -6,13 +6,13 @@ The launch build is a static web app. It has no accounts, adverts, purchases, an
 
 ## What is in the game
 
-- A 5 × 4 merge board for exact book tiers and cheese dishes.
-- Eight recurring visitors with short story progression.
-- Ten cheese dishes with region, ingredients and provenance links.
-- Twelve library upgrades that alter the room and improve progression.
+- A 5 × 4 merge board with six subject collections and exact section-and-tier merging.
+- Twelve recurring visitors with preferences and short story progression.
+- Ten cheese dishes assembled from two to seven separately represented, researched components.
+- Sixteen library upgrades that alter the room and improve progression, including a bindery, catalogue and record-listening alcove.
 - The Word Vault: 49 curated seven-letter targets, 22,298 offline guesses, nine shared guesses, correct repeated-letter scoring, and definitions and usage notes after completion.
-- Three room palettes, eight milestones, daily jobs without a streak penalty, offline caching and save import/export.
-- Original detailed 16-bit pixel-cluster artwork for Lou, visitors, objects and the library. The reference photograph is not stored in this repository.
+- Three teal and sea-green room palettes, eight milestones, daily jobs without a streak penalty, offline caching and save import/export.
+- Original cel-shaded vector artwork for Lou, visitors, objects and the library. Lou has a loose brown bun, tortoiseshell glasses, four expressions and a stylised likeness; the reference photograph is not stored in this repository.
 
 There are no coffee mugs and no inspirational wall slogans. This is enforced partly by taste and partly by `npm run check`.
 
@@ -43,7 +43,7 @@ python -m playwright install chromium webkit
 npm run test:browser
 ```
 
-The browser suite runs Chromium and WebKit at 390 × 844 and 320 × 667. It checks document overflow and clipped content, traverses all four screens and their content pages, performs tap and drag merges, prepares a dish, serves a visitor, buys all upgrades using a validated late-game fixture, solves and loses puzzles, downloads and reimports a save, tests two-tab synchronisation and reloads offline. Screenshots and test backups are written to the ignored `test-results/` directory. These are browser-emulated phone tests, not tests on physical phones.
+The browser suite runs Chromium and WebKit at 390 × 844 and 320 × 667. It checks document overflow and clipped content, traverses all four screens and their catalogue pages, performs tap and drag merges, assembles a seven-component dish, serves a visitor, buys all sixteen upgrades using a validated late-game fixture, solves and loses puzzles, downloads and reimports a save, tests two-tab synchronisation and reloads offline. Screenshots and test backups are written to the ignored `test-results/` directory. These are browser-emulated phone tests, not tests on physical phones.
 
 ## Deploy to Netlify
 
@@ -66,13 +66,13 @@ public/
   styles.css                 Fixed portrait layout and visual system
   manifest.webmanifest       Installable web-app metadata
   sw.js                      Offline cache
-  assets/icon.svg            Pixel-style app icon
+  assets/icon.svg            Teal vector app icon
   data/words.js              Allowed guesses, hard answers and definitions
   data/WORDLIST-LICENCE.txt  Word-list attribution
   src/content.js             Recipes, visitors, upgrades and milestones
   src/engine.js              Pure rules and progression
   src/storage.js             Local saves, validation and backups
-  src/art.js                 Original inline SVG/pixel artwork
+  src/art.js                 Original inline SVG/cel-shaded artwork
   src/app.js                 Browser rendering and interactions
 scripts/                     Local server, checks and packaging
  tests/                      Unit and mobile-browser smoke tests
@@ -103,7 +103,7 @@ The game source and original artwork are currently unlicensed and remain private
 
 ## Completion and maintenance notes
 
-The handover renderer and engine were restored before supporting modules were added. Notable repairs include preserving the actual board during save validation, validating puzzle completion records, displaying answer definitions, guarding cross-tab writes with Web Locks, and clearing undo before non-board progress can be reversed.
+The handover renderer and engine remain the foundation. The current progression adds subject-aware book cataloguing and staged multi-component dishes while migrating the original version-one save shape in place. Notable repairs include preserving the actual board during validation, validating puzzle completion records, displaying answer definitions, guarding cross-tab writes with Web Locks, and clearing undo before non-board progress can be reversed.
 
 See [architecture](docs/ARCHITECTURE.md), [game design](docs/GAME_DESIGN.md), [cheese research](docs/CHEESE_SOURCES.md), [word provenance](docs/WORD_SOURCES.md) and [verification](docs/VERIFICATION.md).
 
