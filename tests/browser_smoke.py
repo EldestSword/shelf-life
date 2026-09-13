@@ -65,12 +65,24 @@ try:
                 page.on('pageerror',lambda e:errors.append(str(e)))
                 page.on('console',lambda msg:errors.append(msg.text) if msg.type=='error' else None)
                 page.on('request',lambda req:remote.append(req.url) if not req.url.startswith(URL) and not req.url.startswith('blob:') else None)
-                page.goto(URL);page.locator('[data-action="start-game"]').wait_for()
+                page.goto(URL);page.locator('[data-action="start-tutorial"]').wait_for()
+                fonts=page.evaluate("document.fonts.ready.then(()=>({atkinson:document.fonts.check('16px Atkinson'),fraunces:document.fonts.check('24px Fraunces')}))")
+                expect(fonts=={'atkinson':True,'fraunces':True},f'Bundled fonts did not load: {fonts}')
                 shot(page,OUT/f'{engine}-{width}-welcome.png')
-                act(page,'start-game')
+                if engine=='chromium' and width==320:
+                    act(page,'start-tutorial');expect(page.get_by_text('1 OF 4 · BOOKS').is_visible(),'Whole-game tutorial did not start')
+                    act(page,'tile',index=0);act(page,'tile',index=1);expect(page.get_by_text('2 OF 4 · CHEESE').is_visible(),'Tutorial did not advance after book merge')
+                    act(page,'tile',index=5);act(page,'tile',index=6);expect(page.get_by_text('3 OF 4 · VISITOR').is_visible(),'Tutorial did not advance after dish')
+                    act(page,'serve');expect(page.get_by_text('4 OF 4 · JOURNAL').is_visible(),'Tutorial did not advance after service')
+                    act(page,'nav',page='journal');expect(page.get_by_text('You’re ready').is_visible(),'Tutorial did not finish in Journal');close(page)
+                    expect(snap(page)['served']==1,'Tutorial did not complete a real request')
+                    page.evaluate('localStorage.clear()');page.reload();page.locator('[data-action="start-without-tutorial"]').wait_for()
+                act(page,'start-without-tutorial')
+                act(page,'help')
                 for _ in range(3): act(page,'help-next')
                 close(page)
                 expect(snap(page)['started'],'Welcome did not save')
+                expect(page.locator('.req-person p').evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=12,'Primary phone copy is too small')
                 act(page,'request-next');act(page,'request-prev');act(page,'visitor-story',index=0);close(page)
                 act(page,'need-info',kind='book');close(page)
                 # A full merge, undo, re-merge, cheese preparation and visitor service, all through controls.
@@ -82,7 +94,7 @@ try:
                 expect(snap(page)['board'][6]=={'kind':'dish','id':'manchego'},'Cheese preparation failed')
                 act(page,'serve');expect(snap(page)['served']==1,'Visitor not served')
                 expect(snap(page)['funds']==128,'Visitor reward incorrect')
-                act(page,'deliver-book');act(page,'acquire-book',section='history');expect(any(x and x['kind']=='book' and x['section']=='history' for x in snap(page)['board']),'Section donation missing')
+                act(page,'deliver-book');act(page,'acquire-book',section='fiction');expect(any(x and x['kind']=='book' and x['section']=='fiction' for x in snap(page)['board']),'Paid subject order missing')
                 for screen in ['play','library','vault','journal']:
                     nav(page,screen);fits(page,f'{engine} {width} {screen}')
                     shot(page,OUT/f'{engine}-{width}-{screen}.png')
@@ -92,7 +104,7 @@ try:
                 with page.expect_download() as pending: act(page,'export')
                 download=pending.value;dest=OUT/f'{engine}-{width}-backup.json';download.save_as(dest)
                 data=dest.read_text(encoding='utf-8');expect(json.loads(data)['state']==before,'Export differs from current save')
-                close(page);nav(page,'play');act(page,'deliver-book');act(page,'acquire-book',section='poetry');import_save(page,data)
+                close(page);nav(page,'play');act(page,'deliver-book');act(page,'acquire-book',section='essays');import_save(page,data)
                 expect(snap(page)==before,'Import round trip changed state')
                 page.reload();page.wait_for_function('()=>(window.SHELF_APP)');expect(snap(page)==before,'Reload lost state')
                 # Malformed imports leave the library unchanged.
@@ -107,18 +119,18 @@ try:
                     act(page,'pantry-next')
                 act(page,'stock-recipe');expect(len([x for x in snap(page)['board'] if x])>=2,'Pantry delivery failed')
                 # Use a validated import fixture to test late content without hours of setup.
-                rich=fixture(page,funds=100000,served=60,daily={'date':page.evaluate('SHELF_ENGINE.dateKey()'),'served':3,'claimed':False})
+                rich=fixture(page,funds=100000,served=70,unlockedSections=page.evaluate('SHELF_CONTENT.sections.map(s=>s.id)'),unlockedRecipes=page.evaluate('SHELF_CONTENT.recipes.map(r=>r.id)'),daily={'date':page.evaluate('SHELF_ENGINE.dateKey()'),'served':3,'claimed':False})
                 import_save(page,rich)
                 act(page,'daily');act(page,'claim-daily');expect(snap(page)['funds']==100075,'Daily reward failed')
-                # The late-game seven-component preparation is assembled through real taps.
+                # A late-game seven-component preparation is assembled through real taps.
                 nav(page,'play');act(page,'pantry');act(page,'pantry-prev')
-                expect(page.get_by_text('7 COMPONENTS').is_visible(),'Advanced preparation complexity missing')
+                expect(page.get_by_text('7 COMPONENTS',exact=True).is_visible(),'Advanced preparation complexity missing')
                 act(page,'stock-recipe')
-                rarebit=[i for i,x in enumerate(snap(page)['board']) if x and x.get('id')=='rarebit']
-                expect(len(rarebit)==7,'Seven-component pantry delivery incomplete')
-                assembly=rarebit[0]
-                for nxt in rarebit[1:]:act(page,'tile',index=assembly);act(page,'tile',index=nxt);assembly=nxt
-                expect(snap(page)['board'][assembly]=={'kind':'dish','id':'rarebit'},'Seven-component preparation failed')
+                advanced=[i for i,x in enumerate(snap(page)['board']) if x and x.get('id')=='huancaina']
+                expect(len(advanced)==7,'Seven-component pantry delivery incomplete')
+                assembly=advanced[0]
+                for nxt in advanced[1:]:act(page,'tile',index=assembly);act(page,'tile',index=nxt);assembly=nxt
+                expect(snap(page)['board'][assembly]=={'kind':'dish','id':'huancaina'},'Seven-component preparation failed')
                 nav(page,'library');act(page,'room-info');close(page)
                 room_versions=[]
                 act(page,'upgrade-next');act(page,'upgrade-prev')
@@ -157,19 +169,18 @@ try:
                 page.keyboard.type('ZZZZZZZ');page.keyboard.press('Enter');expect(len(snap(page)['dailyPuzzle']['guesses'])==0,'Invalid guess used a turn')
                 for _ in range(7):act(page,'key',key='BACK')
                 for char in targets[0]:act(page,'key',key=char)
-                act(page,'key',key='ENTER');expect(len(snap(page)['dailyPuzzle']['guesses'])==1,'First answer not submitted')
-                expect(not snap(page)['dailyPuzzle']['rewarded'],'Partial answer rewarded too early')
-                page.keyboard.type(targets[1]);page.keyboard.press('Enter');settle(page)
-                expect(page.locator('.answer-entry').count()==2,'Missing definitions after win')
+                act(page,'key',key='ENTER');expect(len(snap(page)['dailyPuzzle']['guesses'])==1,'Answer not submitted')
+                expect(snap(page)['dailyPuzzle']['rewarded'],'Solved word was not rewarded')
+                expect(page.locator('.answer-entry').count()==1,'Missing definition after win')
                 expect(snap(page)['puzzles']==1,'Puzzle win missing')
                 close(page);act(page,'puzzle-result');close(page)
                 act(page,'vault-mode',mode='practice');act(page,'abandon-practice');act(page,'new-practice')
                 expect(snap(page)['practiceCount']==1,'Practice replacement failed')
-                guesses=page.evaluate('SHELF_WORDS.answers.filter(w=>!SHELF_APP.snapshot().practicePuzzle.targets.includes(w)).slice(0,9)')
+                guesses=page.evaluate('SHELF_WORDS.answers.filter(w=>!SHELF_APP.snapshot().practicePuzzle.targets.includes(w)).slice(0,6)')
                 for word in guesses:page.keyboard.type(word);page.keyboard.press('Enter');settle(page);settle(page)
-                expect(page.locator('.answer-entry').count()==2,'Missing definitions after loss')
-                expect(len(snap(page)['practicePuzzle']['guesses'])==9,'Practice loss did not finish')
-                close(page);act(page,'new-practice');expect(snap(page)['practicePuzzle']['guesses']==[],'New pair not fresh')
+                expect(page.locator('.answer-entry').count()==1,'Missing definition after loss')
+                expect(len(snap(page)['practicePuzzle']['guesses'])==6,'Practice loss did not finish')
+                close(page);act(page,'new-practice');expect(snap(page)['practicePuzzle']['guesses']==[],'New word not fresh')
                 # Settings and accessibility controls.
                 act(page,'settings')
                 for setting in ['sound','motion','contrast']:act(page,'toggle-setting',setting=setting)
@@ -220,12 +231,12 @@ try:
                 print(f'PASS {engine} {width}x{height}: screens, merges, campaign controls, vault, backups, offline, expressions',flush=True)
                 context.close()
             # Concurrent tabs, protected by Web Locks where supported.
-            ctx=browser.new_context();a=ctx.new_page();a.goto(URL);act(a,'start-game');close(a)
+            ctx=browser.new_context();a=ctx.new_page();a.goto(URL);act(a,'start-without-tutorial');close(a)
             b=ctx.new_page();b.goto(URL);b.wait_for_function('()=>(window.SHELF_APP)')
             count=lambda page:len([x for x in snap(page)['board'] if x])
             original=count(a)
             a.evaluate('document.querySelector("[data-action=deliver-book]").click()');act(a,'acquire-book',section='fiction')
-            b.evaluate('document.querySelector("[data-action=deliver-book]").click()');act(b,'acquire-book',section='poetry')
+            b.evaluate('document.querySelector("[data-action=deliver-book]").click()');act(b,'acquire-book',section='essays')
             a.wait_for_function('(n)=>SHELF_APP.snapshot().board.filter(Boolean).length===n',arg=original+2)
             b.wait_for_function('(n)=>SHELF_APP.snapshot().board.filter(Boolean).length===n',arg=original+2)
             expect(snap(a)==snap(b),'Tabs diverged')

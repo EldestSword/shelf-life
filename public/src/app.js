@@ -26,8 +26,8 @@
   let journalTab = 'recipes';
   let journalIndex = 0;
   let vaultMode = 'daily';
-  let activeWord = 0;
   let helpStep = 0;
+  let tutorialStep = 0;
   let undoState = null;
   let swapMode = false;
   let popCell = -1;
@@ -120,13 +120,13 @@
     if (vaultMode === 'daily') {
       const date = E.dateKey();
       if (!state.dailyPuzzle || state.dailyPuzzle.date !== date) {
-        state.dailyPuzzle = E.makePuzzle(E.hash('ShelfLife.daily.v1.' + date), W.answers, date);
+        state.dailyPuzzle = E.makePuzzle(E.hash('ShelfLife.daily.v2.' + date), W.answers, date);
         save();
       }
       return state.dailyPuzzle;
     }
     if (!state.practicePuzzle) {
-      state.practicePuzzle = E.makePuzzle(E.hash('ShelfLife.practice.v1.' + state.seed + '.' + state.practiceCount), W.answers);
+      state.practicePuzzle = E.makePuzzle(E.hash('ShelfLife.practice.v2.' + state.seed + '.' + state.practiceCount), W.answers);
       save();
     }
     return state.practicePuzzle;
@@ -150,6 +150,25 @@
     if (page === 'library') renderLibrary();
     if (page === 'vault') renderVault();
     if (page === 'journal') renderJournal();
+    renderTutorial();
+  }
+  function renderTutorial() {
+    const coach = $('#tutorial-coach');
+    const steps = {
+      1: ['1 OF 4 · BOOKS', 'Tap the two Fiction books marked F. Matching section and level combine.'],
+      2: ['2 OF 4 · CHEESE', 'Now tap Manchego and membrillo. Two real components become one finished dish.'],
+      3: ['3 OF 4 · VISITOR', 'Maeve now has exactly what she asked for. Tap Serve on her request.'],
+      4: ['4 OF 4 · JOURNAL', 'Open Journal below. It records every dish, book level, regular and milestone.']
+    };
+    coach.hidden = !tutorialStep;
+    document.querySelectorAll('.tutorial-target').forEach(el => el.classList.remove('tutorial-target'));
+    if (!tutorialStep) return;
+    const [title, copy] = steps[tutorialStep];
+    coach.innerHTML = `<div><strong>${title}</strong><span>${copy}</span></div><button data-action="tutorial-skip">Skip</button>`;
+    if (tutorialStep === 1) document.querySelectorAll('.tile[data-index="0"],.tile[data-index="1"]').forEach(el => el.classList.add('tutorial-target'));
+    if (tutorialStep === 2) document.querySelectorAll('.tile[data-index="5"],.tile[data-index="6"]').forEach(el => el.classList.add('tutorial-target'));
+    if (tutorialStep === 3) document.querySelector('.serve-button')?.classList.add('tutorial-target');
+    if (tutorialStep === 4) document.querySelector('.nav-button[data-page="journal"]')?.classList.add('tutorial-target');
   }
   function requirement(item, ready) {
     return `<button class="need ${ready ? 'ready' : ''}" data-action="need-info" data-kind="${item.kind}" data-id="${item.id || ''}" data-tier="${item.tier || ''}" data-section="${item.section || ''}" aria-label="Need ${escape(labelOf(item))}. ${ready ? 'Ready to serve' : 'Not ready'}">${A.item(item)}<span>${escape(nameOf(item))}<small>${ready ? 'Ready' : item.kind === 'book' ? 'Exact section · L' + item.tier : 'Prepare every component'}</small></span>${ready ? '<i class="check-badge">' + A.icon('check') + '</i>' : ''}</button>`;
@@ -168,7 +187,7 @@
       return `<button class="tile ${!item ? 'empty' : ''} ${index === selected ? 'selected' : ''} ${match ? 'match' : ''} ${index === popCell ? 'pop' : ''}" data-action="tile" data-index="${index}" aria-label="Space ${index + 1}: ${escape(labelOf(item))}${index === selected ? ', selected' : ''}${match ? ', can combine with selected item' : ''}" aria-pressed="${index === selected}" tabindex="0">${A.item(item)}${badge}</button>`;
     }).join('');
     $('#page-play').innerHTML = `
-      <div class="hero" data-action="open-library" role="button" tabindex="0" aria-label="Visit your library">${A.room(state)}<div class="hero-caption"><strong>Lou’s Library</strong><small>SIX COLLECTIONS · SERIOUS CHEESE · OBSCURE WORDS</small></div><button class="daily-chip ${state.daily.served >= 3 && !state.daily.claimed ? 'claimable' : ''}" data-action="daily" aria-label="Today’s three visitor bonus">Daily jobs<b>${state.daily.claimed ? '✓' : Math.min(3, state.daily.served) + '/3'}</b></button></div>
+      <div class="hero" data-action="open-library" role="button" tabindex="0" aria-label="Visit your library">${A.room(state)}<div class="hero-caption"><strong>Lou’s Library</strong><small>SIX COLLECTIONS · 24 DISHES · CURATED WORDS</small></div><button class="daily-chip ${state.daily.served >= 3 && !state.daily.claimed ? 'claimable' : ''}" data-action="daily" aria-label="Today’s three visitor bonus">Daily jobs<b>${state.daily.claimed ? '✓' : Math.min(3, state.daily.served) + '/3'}</b></button></div>
       <article class="request-card" aria-label="Visitor request from ${escape(v.name)}">
         <div class="req-top"><button class="visitor-button" data-action="visitor-story" data-index="${q.visitor}" aria-label="Read ${escape(v.name)}’s story">${A.visitor(q.visitor)}</button><div class="req-person"><strong>${escape(v.name)}</strong><p>${escape(line)}</p></div><div class="req-pager"><button data-action="request-prev" aria-label="Previous visitor">${A.icon('left')}</button><span>${requestIndex + 1}/3</span><button data-action="request-next" aria-label="Next visitor">${A.icon('right')}</button></div></div>
         <div class="req-bottom"><div class="needs">${requirement({ kind: 'book', tier: q.tier, section: q.section }, needed.book >= 0)}${q.recipe ? requirement({ kind: 'dish', id: q.recipe }, needed.dish >= 0) : ''}</div><button data-action="serve" class="serve-button ${needed.ready ? 'ready' : ''}" ${needed.ready ? '' : 'disabled'}><strong>Serve ${needed.ready ? '✓' : ''}</strong><small>+${E.reward(state, q)} funds</small></button></div>
@@ -198,33 +217,30 @@
     const status = E.puzzleStatus(p);
     const letters = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
     const keyStates = {};
-    p.guesses.forEach(guess => E.feedback(guess, p.targets[activeWord]).forEach((value, index) => { keyStates[guess[index]] = Math.max(keyStates[guess[index]] ?? -1, value); }));
-    const boards = p.targets.map((target, index) => {
-      const solvedAt = p.guesses.indexOf(target);
-      let grid = '';
-      for (let row = 0; row < 9; row++) {
-        const frozen = solvedAt >= 0 && row > solvedAt;
-        const guess = !frozen ? p.guesses[row] : null;
-        const typing = !status.done && row === p.guesses.length && !status.solved[index];
-        const input = typing ? p.input : '';
-        const feedback = guess ? E.feedback(guess, target) : null;
-        for (let col = 0; col < 7; col++) {
-          const letter = guess?.[col] || input[col] || '';
-          const meaning = feedback ? ['not present', 'present, different position', 'correct position'][feedback[col]] : typing ? 'current guess' : 'empty';
-          grid += `<span class="letter ${feedback ? 's' + feedback[col] : typing && letter ? 'typed' : ''}" aria-label="Word ${index + 1}, guess ${row + 1}, letter ${col + 1}: ${letter || 'empty'}${letter ? ', ' + meaning : ''}">${letter}</span>`;
-        }
+    const target = p.targets[0];
+    p.guesses.forEach(guess => E.feedback(guess, target).forEach((value, index) => { keyStates[guess[index]] = Math.max(keyStates[guess[index]] ?? -1, value); }));
+    let grid = '';
+    for (let row = 0; row < 6; row++) {
+      const guess = p.guesses[row];
+      const typing = !status.done && row === p.guesses.length;
+      const input = typing ? p.input : '';
+      const feedback = guess ? E.feedback(guess, target) : null;
+      for (let col = 0; col < 7; col++) {
+        const letter = guess?.[col] || input[col] || '';
+        const meaning = feedback ? ['not present', 'present, different position', 'correct position'][feedback[col]] : typing ? 'current guess' : 'empty';
+        grid += `<span class="letter ${feedback ? 's' + feedback[col] : typing && letter ? 'typed' : ''}" aria-label="Guess ${row + 1}, letter ${col + 1}: ${letter || 'empty'}${letter ? ', ' + meaning : ''}">${letter}</span>`;
       }
-      return `<div class="word-board ${activeWord === index ? 'active' : ''}"><button class="word-board-head" data-action="word-focus" data-index="${index}" aria-pressed="${activeWord === index}">${status.solved[index] ? A.icon('check') : A.icon('key')} ${index === 0 ? 'THE WEST ARCHIVE' : 'THE EAST ARCHIVE'}</button><div class="letter-grid">${grid}</div></div>`;
-    }).join('');
+    }
+    const board = `<div class="word-board active"><div class="word-board-head">${status.won ? A.icon('check') : A.icon('key')} ${vaultMode === 'daily' ? 'THE DAILY SHELF' : 'PRACTICE SHELF'}</div><div class="letter-grid">${grid}</div></div>`;
     const key = (letter, wide = false) => `<button class="key-button ${wide ? 'wide' : ''} ${keyStates[letter] !== undefined ? 'k' + keyStates[letter] : ''}" data-action="key" data-key="${letter}" aria-label="${letter === 'BACK' ? 'Delete letter' : letter === 'ENTER' ? 'Submit guess' : letter}">${letter === 'BACK' ? A.icon('keyboard') : letter}</button>`;
-    let statusText = `<strong>${9 - p.guesses.length} shared guesses left</strong><p>${status.solved.filter(Boolean).length}/2 archives unlocked. Both need seven letters.</p>`;
-    if (status.done) statusText = `<strong>${status.won ? 'Both archives unlocked.' : 'The archives keep a few secrets.'}</strong><p>${status.won ? 'A very well-earned 140 library funds.' : 'One word solved earns 30 funds. No penalties.'}</p>`;
+    let statusText = `<strong>${6 - p.guesses.length} guesses left</strong><p>One seven-letter word. Familiar most days; occasionally a little sharper.</p>`;
+    if (status.done) statusText = `<strong>${status.won ? 'Shelf unlocked.' : 'This one stayed shut.'}</strong><p>${status.won ? 'A well-earned 80 library funds.' : 'No penalty. The answer is waiting.'}</p>`;
     $('#page-vault').innerHTML = `
-      <div class="page-heading"><div><h1>The Word Vault</h1><p>Two words. Seven letters. Nine shared guesses.</p></div><button class="icon-button" data-action="vault-help" aria-label="Word Vault rules">${A.icon('help')}</button></div>
+      <div class="page-heading"><div><h1>The Word Vault</h1><p>One word. Seven letters. Six guesses.</p></div><button class="icon-button" data-action="vault-help" aria-label="Word Vault rules">${A.icon('help')}</button></div>
       <div class="segmented" aria-label="Puzzle mode"><button data-action="vault-mode" data-mode="daily" class="${vaultMode === 'daily' ? 'active' : ''}">Daily archive</button><button data-action="vault-mode" data-mode="practice" class="${vaultMode === 'practice' ? 'active' : ''}">The endless shelves</button></div>
-      <div class="word-boards">${boards}</div>
-      <div class="word-status"><div>${statusText}</div>${status.done ? `<button class="btn secondary" data-action="${vaultMode === 'practice' ? 'new-practice' : 'puzzle-result'}">${vaultMode === 'practice' ? 'Next pair' : 'Results'}</button>` : `<button class="btn ghost" data-action="${vaultMode === 'practice' ? 'abandon-practice' : 'vault-help'}">${vaultMode === 'practice' ? 'New pair' : 'Rules'}</button>`}</div>
-      <div class="keyboard" aria-label="On-screen keyboard. Colours describe the selected archive.">${letters.map((row, index) => `<div class="key-row ${index === 1 ? 'middle' : ''}">${index === 2 ? key('ENTER', true) : ''}${row.split('').map(l => key(l)).join('')}${index === 2 ? key('BACK', true) : ''}</div>`).join('')}</div>
+      <div class="word-boards single">${board}</div>
+      <div class="word-status"><div>${statusText}</div>${status.done ? `<button class="btn secondary" data-action="${vaultMode === 'practice' ? 'new-practice' : 'puzzle-result'}">${vaultMode === 'practice' ? 'Next word' : 'Result'}</button>` : `<button class="btn ghost" data-action="${vaultMode === 'practice' ? 'abandon-practice' : 'vault-help'}">${vaultMode === 'practice' ? 'New word' : 'Rules'}</button>`}</div>
+      <div class="keyboard" aria-label="On-screen keyboard">${letters.map((row, index) => `<div class="key-row ${index === 1 ? 'middle' : ''}">${index === 2 ? key('ENTER', true) : ''}${row.split('').map(l => key(l)).join('')}${index === 2 ? key('BACK', true) : ''}</div>`).join('')}</div>
       <div class="vault-footer"><span class="legend"><i></i>Right place</span><span class="legend gold"><i></i>Wrong place</span><span class="legend grey"><i></i>Not present</span></div>`;
   }
   function journalTotal() { return journalTab === 'recipes' ? C.recipes.length : journalTab === 'books' ? C.sections.length : journalTab === 'people' ? C.visitors.length : Math.ceil(C.achievements.length / 3); }
@@ -234,12 +250,13 @@
     if (journalTab === 'recipes') {
       const r = C.recipes[journalIndex];
       const discovered = state.discovered.includes(r.id);
-      const unlocked = state.served >= r.unlock;
-      content = `<article class="collection-card ${unlocked ? '' : 'locked'}"><span class="eyebrow">THE CHEESE ATLAS · ${journalIndex + 1}/${C.recipes.length}</span>${A.item({ kind: 'dish', id: r.id })}<div><h2>${escape(r.name)}</h2><p class="recipe-region">${escape(r.region)}</p></div><span class="pill">${A.icon(discovered ? 'check' : unlocked ? 'cheese' : 'lock')}${discovered ? 'Prepared in your library' : unlocked ? 'Ready to discover' : 'Unlocks after ' + r.unlock + ' visitors'}</span><div class="atlas-notes"><span class="eyebrow">THE PREPARATION</span><p>${escape(r.ingredients)}</p><small>Source: ${escape(r.sources[0][0])}</small></div><p class="fact">${escape(r.fact)}</p><button class="btn secondary" data-action="recipe-details" data-index="${journalIndex}">${A.icon('book')}Ingredients & provenance</button></article>`;
+      const owned = state.unlockedRecipes.includes(r.id), eligible=state.served>=r.unlock;
+      content = `<article class="collection-card ${eligible ? '' : 'locked'}"><span class="eyebrow">THE CHEESE ATLAS · ${journalIndex + 1}/${C.recipes.length}</span>${A.item({ kind: 'dish', id: r.id })}<div><h2>${escape(r.name)}</h2><p class="recipe-region">${escape(r.region)}</p></div><span class="pill">${A.icon(discovered ? 'check' : owned ? 'cheese' : 'lock')}${discovered ? 'Prepared in your library' : owned ? 'Recipe card owned' : eligible ? r.research+' funds to research' : 'Available after ' + r.unlock + ' visitors'}</span><div class="atlas-notes"><span class="eyebrow">THE PREPARATION</span><p>${escape(r.ingredients)}</p><small>Source: ${escape(r.sources[0][0])}</small></div><p class="fact">${escape(r.fact)}</p><button class="btn secondary" data-action="recipe-details" data-index="${journalIndex}">${A.icon('book')}Ingredients & provenance</button></article>`;
     } else if (journalTab === 'books') {
       const section=C.sections[journalIndex],found=Array.from({length:6},(_,i)=>state.catalogued.includes(section.id+':'+(i+1)));
       const best=found.lastIndexOf(true)+1||1;
-      content = `<article class="collection-card book-ledger"><span class="eyebrow">THE CATALOGUE · ${journalIndex+1}/${C.sections.length}</span>${A.book(best,section.id)}<div><h2>${escape(section.name)}</h2><p class="recipe-region">${escape(section.description)}</p></div><span class="pill">${A.icon('book')}${found.filter(Boolean).length}/6 collection levels recorded</span><div class="catalogue-levels">${found.map((yes,i)=>`<div class="${yes?'found':''}">${A.book(i+1,section.id)}<b>L${i+1}</b><span>${escape(C.bookNames[i+1])}</span></div>`).join('')}</div><p class="fact">${found.every(Boolean)?'Every level catalogued. A frankly excessive and excellent shelf.':'Choose this section at Acquisitions, then merge exact section and level matches.'}</p></article>`;
+      const owned=state.unlockedSections.includes(section.id);
+      content = `<article class="collection-card book-ledger ${state.served<section.unlock?'locked':''}"><span class="eyebrow">THE CATALOGUE · ${journalIndex+1}/${C.sections.length}</span>${A.book(best,section.id)}<div><h2>${escape(section.name)}</h2><p class="recipe-region">${escape(section.description)}</p></div><span class="pill">${A.icon(owned?'book':'lock')}${owned?found.filter(Boolean).length+'/6 collection levels recorded':state.served>=section.unlock?section.price+' funds to open':'Available after '+section.unlock+' visitors'}</span><div class="catalogue-levels">${found.map((yes,i)=>`<div class="${yes?'found':''}">${A.book(i+1,section.id)}<b>L${i+1}</b><span>${escape(C.bookNames[i+1])}</span></div>`).join('')}</div><p class="fact">${found.every(Boolean)?'Every level catalogued. A frankly excessive and excellent shelf.':owned?'Buy arrivals, then merge exact section and level matches.':'Open this section from the Acquisitions desk when its visitor requirement is met.'}</p></article>`;
     } else if (journalTab === 'people') {
       const v = C.visitors[journalIndex];
       const visits = state.visits[journalIndex];
@@ -274,35 +291,37 @@
     if (lastFocus?.isConnected) lastFocus.focus({ preventScroll: true });
   }
   function welcome() {
-    showModal(`<div class="welcome-illustration">${A.lou()}<div class="welcome-book">${A.book(3,'art-music')}</div><div class="welcome-cheese">${A.item({ kind: 'dish', id: 'manchego' })}</div></div><span class="eyebrow">SHELF LIFE / BUILT FOR LOU</span><h1 id="modal-title">Books. Cheese.<br>Difficult words.</h1><p>Build six real collections, assemble researched cheese dishes and make the library entirely yours.</p><p class="tiny">No timers. No energy bars. Nothing to catch up on.</p><button class="btn primary" data-action="start-game" autofocus>Open the doors ${A.icon('right')}</button><span class="tiny muted">Progress saves on this device.</span>`, false);
+    showModal(`<div class="welcome-illustration">${A.lou()}<div class="welcome-book">${A.book(3,'art-music')}</div><div class="welcome-cheese">${A.item({ kind: 'dish', id: 'manchego' })}</div></div><span class="eyebrow">SHELF LIFE / BUILT FOR LOU</span><h1 id="modal-title">Books. Cheese.<br>Good words.</h1><p>Build six real collections, cook twenty-four researched cheese dishes and make the library entirely yours.</p><p class="tiny">The guided opening takes about a minute. No timers, energy bars or bullshit.</p><button class="btn primary" data-action="start-tutorial" autofocus>Show me how ${A.icon('right')}</button><button class="btn ghost" data-action="start-without-tutorial">I’ll work it out</button><span class="tiny muted">Progress saves on this device.</span>`, false);
     $('#modal-body').className = 'welcome';
   }
   const helpPages = [
-    { title: 'Catalogue exact matches', copy: 'Choose one of six sections at Acquisitions. Two books merge only when both their section and level match; Fiction level 2 will not merge with Poetry level 2.', extra: 'Build all six shelves in the Journal. Tap an empty space to move an item, or drag it. There is no delivery timer.', art: () => A.book(1,'fiction') + A.icon('plus') + A.book(1,'fiction') + A.icon('right') + A.book(2,'fiction') },
-    { title: 'Build the whole dish', copy: 'Every pantry tile is a real component from the cited preparation. Combine any two components from the same recipe, then keep adding the missing ones until the dish is complete.', extra: 'Simple pairings need two tiles. Later preparations need three, four, five, six or seven. Pantry deliveries are free and clearly state the space required.', art: () => A.item({kind:'ingredient',id:'raclette',component:'raclette'}) + A.icon('plus') + A.item({kind:'ingredient',id:'raclette',component:'potatoes'}) + A.icon('right') + A.item({kind:'prep',id:'raclette',components:['raclette','potatoes']}) },
+    { title: 'Catalogue exact matches', copy: 'Buy a cheaper random arrival or place an exact subject order. Two books merge only when both their section and level match; Fiction level 2 will not merge with Poetry level 2.', extra: 'Use visitor funds to open four further collections. Tap an empty space to move an item, or drag it. There is no delivery timer.', art: () => A.book(1,'fiction') + A.icon('plus') + A.book(1,'fiction') + A.icon('right') + A.book(2,'fiction') },
+    { title: 'Build the whole dish', copy: 'Buy pantry stock, then combine every named component from the same cited preparation. Research later recipe cards with visitor funds before their stock becomes available.', extra: 'Simple pairings need two tiles. Later preparations need three, four, five, six or seven. Every stock order states its cost and the space required.', art: () => A.item({kind:'ingredient',id:'raclette',component:'raclette'}) + A.icon('plus') + A.item({kind:'ingredient',id:'raclette',component:'potatoes'}) + A.icon('right') + A.item({kind:'prep',id:'raclette',components:['raclette','potatoes']}) },
     { title: 'A place of your own', copy: 'Visitors ask for an exact book section and level, and sometimes a complete dish. Fulfil the request for library funds, then spend those on visible improvements. Check the Journal for the catalogue and milestones.', extra: 'Browse all three requests with the arrows. Return unwanted items with the curved arrow; Undo reverses your last board action.', art: () => A.lou() + A.icon('heart') + A.icon('library') },
-    { title: 'A less cosy word puzzle', copy: 'The Word Vault has TWO seven-letter words and NINE shared guesses. Every guess gives feedback for both words. Select an archive to see its keyboard colours. Repeated letters are counted correctly.', extra: 'Daily and endless practice puzzles are optional. Solve both for 140 funds, or one for 30. No easy sentence clues. No penalties for leaving.', art: () => A.icon('key') + '<strong style="letter-spacing:3px;font-size:18px">? ? ? ? ? ? ?</strong>' }
+    { title: 'One word, fairly chosen', copy: 'The Word Vault has one seven-letter word and six guesses. Most targets are familiar words such as ARCHIVE, CLARITY or PENSIVE; one day in five is a little trickier. Repeated letters are counted correctly.', extra: 'Daily and endless practice puzzles are optional. A solve earns 80 funds. A miss costs nothing and shows the definition and usage note.', art: () => A.icon('key') + '<strong style="letter-spacing:3px;font-size:18px">? ? ? ? ? ? ?</strong>' }
   ];
   function help() {
     const h = helpPages[helpStep];
     showModal(`${modalHead(h.title)}<div class="help-art">${h.art()}</div><p class="modal-copy">${h.copy}</p><p class="modal-copy">${h.extra}</p><div class="step-dots">${helpPages.map((_, i) => `<i class="${i === helpStep ? 'active' : ''}"></i>`).join('')}</div><div class="modal-actions"><button class="btn ghost" data-action="${helpStep ? 'help-prev' : 'close'}">${helpStep ? 'Back' : 'Got the idea'}</button><button class="btn primary" data-action="${helpStep === 3 ? 'close' : 'help-next'}">${helpStep === 3 ? 'Into the library' : 'Next'}</button></div>`);
   }
   function settings() {
-    showModal(`${modalHead('Settings')}<div class="stack"><button class="setting-row" data-action="toggle-setting" data-setting="sound" role="switch" aria-checked="${state.settings.sound}"><span class="setting-label">${A.icon('volume')} Gentle sound effects</span><span class="toggle ${state.settings.sound ? 'on' : ''}"></span></button><button class="setting-row" data-action="toggle-setting" data-setting="motion" role="switch" aria-checked="${state.settings.motion}"><span class="setting-label">${A.icon('spark')} Character & merge animation</span><span class="toggle ${state.settings.motion ? 'on' : ''}"></span></button><button class="setting-row" data-action="toggle-setting" data-setting="contrast" role="switch" aria-checked="${state.settings.contrast}"><span class="setting-label">${A.icon('key')} Extra letter feedback symbols</span><span class="toggle ${state.settings.contrast ? 'on' : ''}"></span></button></div><div class="settings-grid"><button class="btn secondary" data-action="help">${A.icon('help')}How to play</button><button class="btn secondary" data-action="backup">${A.icon('download')}Save backups</button><button class="btn ghost" data-action="about">${A.icon('info')}About the game</button><button class="btn ghost" data-action="reset-confirm">Start again</button></div>${updateWorker ? '<button class="btn gold block" data-action="update-app">A new version is ready. Save & reload.</button>' : ''}<p class="modal-note">Your device’s reduced-motion preference takes priority. Progress stays in this browser, on this website address.</p><div class="version-note"><span>Shelf Life 1.1.0</span><span>${store.volatile ? 'Backup recommended' : 'Saved on this device'}</span></div>`);
+    showModal(`${modalHead('Settings')}<div class="stack"><button class="setting-row" data-action="toggle-setting" data-setting="sound" role="switch" aria-checked="${state.settings.sound}"><span class="setting-label">${A.icon('volume')} Gentle sound effects</span><span class="toggle ${state.settings.sound ? 'on' : ''}"></span></button><button class="setting-row" data-action="toggle-setting" data-setting="motion" role="switch" aria-checked="${state.settings.motion}"><span class="setting-label">${A.icon('spark')} Character & merge animation</span><span class="toggle ${state.settings.motion ? 'on' : ''}"></span></button><button class="setting-row" data-action="toggle-setting" data-setting="contrast" role="switch" aria-checked="${state.settings.contrast}"><span class="setting-label">${A.icon('key')} Extra letter feedback symbols</span><span class="toggle ${state.settings.contrast ? 'on' : ''}"></span></button></div><div class="settings-grid"><button class="btn secondary" data-action="help">${A.icon('help')}How to play</button><button class="btn secondary" data-action="backup">${A.icon('download')}Save backups</button><button class="btn ghost" data-action="about">${A.icon('info')}About the game</button><button class="btn ghost" data-action="reset-confirm">Start again</button></div>${updateWorker ? '<button class="btn gold block" data-action="update-app">A new version is ready. Save & reload.</button>' : ''}<p class="modal-note">Your device’s reduced-motion preference takes priority. Progress stays in this browser, on this website address.</p><div class="version-note"><span>Shelf Life 1.2.0</span><span>${store.volatile ? 'Backup recommended' : 'Saved on this device'}</span></div>`);
   }
   function acquisitions() {
-    showModal(`${modalHead('The acquisitions desk')}<p class="modal-copy">Choose the section for this donation. Its level is still determined by your library improvements.</p><div class="section-picker">${C.sections.map(s=>`<button data-action="acquire-book" data-section="${s.id}" style="--section:${s.colour};--accent:${s.accent}">${A.book(2,s.id)}<span><strong>${escape(s.name)}</strong><small>${escape(s.description)}</small></span></button>`).join('')}</div><p class="modal-note">Exact section and level matches merge. This is a catalogue, not one beige heap of “books”.</p>`);
+    showModal(`${modalHead('The acquisitions desk')}<div class="purchase-summary"><span>Available funds</span><strong>${number(state.funds)}</strong></div><button class="btn primary block arrival-button" data-action="buy-arrival" ${state.funds<E.bookPrice()? 'disabled':''}>Browse today’s arrivals · ${E.bookPrice()} funds</button><p class="modal-note">Arrivals are cheaper, but their section is random among those you have opened. A subject order costs ${E.bookPrice('fiction')} funds.</p><div class="section-picker">${C.sections.map(s=>{const owned=state.unlockedSections.includes(s.id),eligible=state.served>=s.unlock;const action=owned?'acquire-book':'unlock-section',disabled=owned?state.funds<E.bookPrice(s.id):!eligible||state.funds<s.price;const detail=owned?'Order this section · '+E.bookPrice(s.id)+' funds':eligible?'Open section · '+s.price+' funds':s.unlock+' visitors to open';return `<button data-action="${action}" data-section="${s.id}" style="--section:${s.colour};--accent:${s.accent}" ${disabled?'disabled':''}>${A.book(2,s.id)}<span><strong>${escape(s.name)}</strong><small>${detail}</small></span></button>`;}).join('')}</div><p class="modal-note">Higher-level arrivals only appear after the relevant room improvements. There are no delivery timers.</p>`);
   }
   function recipeModal(index, canDeliver = false) {
     const r = C.recipes[index];
     pantryIndex = index;
-    const unlocked = state.served >= r.unlock;
+    const owned = state.unlockedRecipes.includes(r.id), eligible = state.served >= r.unlock;
     let panel;
     if (recipeTab === 1) panel = `<p>${escape(r.ingredients)}</p><p>Each named component appears separately on the merge board. Combining them is game shorthand; the Atlas description records the actual preparation.</p>`;
     else if (recipeTab === 2) panel = `<p>Recipe and provenance references:</p>${r.sources.map(([title, url]) => `<a href="${escape(url)}" target="_blank" rel="noopener noreferrer">${escape(title)} ↗</a>`).join('')}<p class="tiny">Authored summaries, not copied recipes. Regional and producer variations are not all represented.</p>`;
     else panel = `<span class="pill">${escape(r.region)}</span><p>${escape(r.detail)}</p>`;
     const parts=r.components.map((c,i)=>`<div class="ingredient">${A.item({kind:'ingredient',id:r.id,component:c.id})}<span><b>${i+1}</b>${escape(c.name)}</span></div>`).join('');
-    showModal(`${modalHead(canDeliver ? 'The cheese pantry' : 'The cheese atlas')}<div class="recipe-title-row"><div><span class="eyebrow">${r.components.length} COMPONENT${r.components.length===1?'':'S'}</span><h3 class="recipe-name">${escape(r.name)}</h3></div><span class="complexity" aria-label="${r.components.length} component recipe">${'●'.repeat(r.components.length)}</span></div><div class="recipe-combo">${parts}</div><div class="recipe-tabs">${['The preparation','Ingredients','Sources'].map((tab,i)=>`<button data-action="recipe-tab" data-index="${i}" data-deliver="${canDeliver}" class="${recipeTab===i?'active':''}">${tab}</button>`).join('')}</div><div class="recipe-panel">${panel}</div>${canDeliver ? `<div class="pantry-footer"><div class="pager"><button data-action="pantry-prev" aria-label="Previous pairing">${A.icon('left')}</button><span>${index + 1}/${C.recipes.length}</span><button data-action="pantry-next" aria-label="Next pairing">${A.icon('right')}</button></div><button class="btn ${unlocked ? 'primary' : 'ghost'}" data-action="stock-recipe" ${unlocked ? '' : 'disabled'}>${unlocked ? 'Bring '+r.components.length+' to board' : r.unlock + ' visitors first'}</button></div><p class="modal-note">${unlocked ? 'Needs '+r.components.length+' empty spaces. No charge, no waiting.' : Math.max(0,r.unlock-state.served)+' more visitor requests to unlock this preparation.'}</p>` : '<button class="btn secondary block" data-action="close">Back to the library</button>'}`);
+    const action=owned?'stock-recipe':'buy-recipe',affordable=owned?state.funds>=r.stock:state.funds>=r.research,enabled=owned||eligible;
+    const button=owned?`Stock ${r.components.length} components · ${r.stock} funds`:eligible?`Buy recipe card · ${r.research} funds`:`Available after ${r.unlock} visitors`;
+    showModal(`${modalHead(canDeliver ? 'The cheese pantry' : 'The cheese atlas')}<div class="recipe-title-row"><div><span class="eyebrow">${r.components.length} COMPONENT${r.components.length===1?'':'S'}</span><h3 class="recipe-name">${escape(r.name)}</h3></div><span class="complexity" aria-label="${r.components.length} component recipe">${'●'.repeat(r.components.length)}</span></div><div class="recipe-combo">${parts}</div><div class="recipe-tabs">${['The preparation','Ingredients','Sources'].map((tab,i)=>`<button data-action="recipe-tab" data-index="${i}" data-deliver="${canDeliver}" class="${recipeTab===i?'active':''}">${tab}</button>`).join('')}</div><div class="recipe-panel">${panel}</div>${canDeliver ? `<div class="pantry-footer"><div class="pager"><button data-action="pantry-prev" aria-label="Previous pairing">${A.icon('left')}</button><span>${index + 1}/${C.recipes.length}</span><button data-action="pantry-next" aria-label="Next pairing">${A.icon('right')}</button></div><button class="btn ${enabled&&affordable ? 'primary' : 'ghost'}" data-action="${action}" ${enabled&&affordable ? '' : 'disabled'}>${button}</button></div><p class="modal-note">${owned?'Stock needs '+r.components.length+' empty spaces and costs '+r.stock+' funds.':eligible?'Research once, then buy fresh stock whenever you need it.':Math.max(0,r.unlock-state.served)+' more visitor requests before this recipe can be researched.'}</p>` : '<button class="btn secondary block" data-action="close">Back to the library</button>'}`);
   }
   function itemInfo(item) {
     if (!item) return;
@@ -321,7 +340,8 @@
   function puzzleResult() {
     const p = getPuzzle(), status = E.puzzleStatus(p);
     if (!status.done) return;
-    showModal(`${modalHead(status.won ? 'Both archives unlocked' : 'This pair is complete')}<div class="answer-list">${p.targets.map(t => `<article class="answer-entry"><strong>${t}</strong><p>${escape(W.definitions[t].definition)}</p><small>${escape(W.definitions[t].note)}</small></article>`).join('')}</div><p class="modal-copy">${status.won ? 'Solved in ' + p.guesses.length + ' of 9 shared guesses. Your 140 library funds have already been added.' : status.solved.some(Boolean) ? 'One archive unlocked. Your 30 library funds have already been added.' : 'No funds lost. Well, that went to shit. A fresh pair is waiting on the endless shelves.'}</p>${status.won && state.puzzles % 3 === 0 ? '<p class="modal-copy">Lou: “Fuck me, that was obscure.”</p>' : ''}<p class="modal-note">The answer pool is curated separately. The broader offline guess dictionary also accepts some names and regional variants.</p><div class="modal-actions"><button class="btn ghost" data-action="close">See the board</button><button class="btn primary" data-action="new-practice">Another pair</button></div>`);
+    const target=p.targets[0];
+    showModal(`${modalHead(status.won ? 'Shelf unlocked' : 'Answer filed')}<div class="answer-list"><article class="answer-entry"><strong>${target}</strong><p>${escape(W.definitions[target].definition)}</p><small>${escape(W.definitions[target].note)}</small></article></div><p class="modal-copy">${status.won ? 'Solved in ' + p.guesses.length + ' of 6 guesses. Your 80 library funds have already been added.' : 'No funds lost. Well, that went to shit. A fresh word is waiting on the endless shelves.'}</p>${status.won && state.puzzles % 4 === 0 ? '<p class="modal-copy">Lou: “Bloody hell. First-rate vocabulary.”</p>' : ''}<p class="modal-note">Most targets are familiar vocabulary. The broader offline guess dictionary also accepts some names and regional variants.</p><div class="modal-actions"><button class="btn ghost" data-action="close">See the board</button><button class="btn primary" data-action="new-practice">Another word</button></div>`);
   }
   function backup() {
     showModal(`${modalHead('Keep your library safe')}<div class="backup-state"><strong>Your current library</strong><br>${state.served} visitors · ${state.upgrades.length}/${C.upgrades.length} improvements<br>${number(state.funds)} funds · ${state.discovered.length}/${C.recipes.length} dishes · ${state.catalogued.length}/36 books</div><p class="modal-copy">Automatic saving uses this browser on this website address. Clearing site data, changing browsers or moving to a different address can leave that save behind.</p><div class="stack"><button class="btn primary block" data-action="export">${A.icon('download')}Export a save file</button><button class="btn secondary block" data-action="import">${A.icon('upload')}Import a save file</button><button class="btn ghost block" data-action="previous-save">Restore the previous valid save</button></div><p class="modal-note">Export before a big update or a change of hosting. Import it afterwards. Importing replaces local progress only after you confirm.</p>`);
@@ -364,6 +384,8 @@
     const result = E.move(state, from, to, swap);
     if (!result.ok) { undoState = null; return; }
     selected = -1; swapMode = false; popCell = to;
+    if (tutorialStep === 1 && result.type === 'merge' && result.item?.kind === 'book' && result.item.section === 'fiction' && result.item.tier === 2) tutorialStep = 2;
+    if (tutorialStep === 2 && result.type === 'dish' && result.item?.id === 'manchego') { tutorialStep = 3; requestIndex = 0; }
     commit();
     sound(result.type === 'move' ? 'tap' : 'merge');
     if (result.type === 'dish' || result.type === 'prep') document.querySelectorAll('.room-lou .lou-character').forEach(el=>el.dataset.expression='pleased');
@@ -379,7 +401,6 @@
       const result = E.submitGuess(state, p, p.input, allowed);
       if (!result.ok) { say(result.message); return; }
       clearUndo();
-      if (result.solved[activeWord] && !result.done) activeWord = activeWord === 0 ? 1 : 0;
       commit();
       sound(result.won ? 'win' : 'tap');
       if (result.done) { if (result.won) confetti(); puzzleResult(); }
@@ -389,12 +410,14 @@
     save(); renderVault();
   }
   function nextPractice() {
-    vaultMode = 'practice'; activeWord = 0; state.practiceCount++;
-    state.practicePuzzle = E.makePuzzle(E.hash('ShelfLife.practice.v1.' + state.seed + '.' + state.practiceCount), W.answers);
+    vaultMode = 'practice'; state.practiceCount++;
+    state.practicePuzzle = E.makePuzzle(E.hash('ShelfLife.practice.v2.' + state.seed + '.' + state.practiceCount), W.answers);
     page = 'vault'; clearUndo(); modalDismissable = true; closeModal(); commit();
   }
   function navigate(target) {
     if (!['play', 'library', 'vault', 'journal'].includes(target)) return;
+    if (tutorialStep && tutorialStep < 4 && target !== 'play') { say('Finish the guided opening, or tap Skip.'); return; }
+    if (tutorialStep === 4 && !['play','journal'].includes(target)) { say('Journal first. It is highlighted below.'); return; }
     clearUndo();
     selected = -1; swapMode = false;
     if (target === 'library' && page !== 'library') {
@@ -402,6 +425,10 @@
       upgradeIndex = next >= 0 ? next : C.upgrades.length-1;
     }
     page = target; render();
+    if (tutorialStep === 4 && target === 'journal') {
+      tutorialStep = 0; render();
+      showModal(`${modalHead('You’re ready')}<div class="help-art">${A.lou('pleased')}${A.icon('journal')}</div><p class="modal-copy">That is the complete loop: merge exact books, assemble every dish component, fulfil a request, then track the library here.</p><p class="modal-copy">Spend visitor funds on book arrivals, pantry stock, new collections, recipe cards and room improvements. The Word Vault is optional. Everything saves as you go.</p><button class="btn primary block" data-action="close">Right. Let me at it.</button>`);
+    }
   }
   function perform(action, data = {}) {
     if(E.rotateDay(state,E.dateKey())) clearUndo();
@@ -410,7 +437,9 @@
       case 'nav': navigate(data.page); break;
       case 'open-library': navigate('library'); break;
       case 'close': closeModal(); break;
-      case 'start-game': state.started = true; modalDismissable = true; closeModal(); commit(); helpStep = 0; help(); break;
+      case 'start-tutorial': state.started = true; tutorialStep = 1; modalDismissable = true; closeModal(); commit(); break;
+      case 'start-without-tutorial': state.started = true; tutorialStep = 0; modalDismissable = true; closeModal(); commit(); break;
+      case 'tutorial-skip': tutorialStep = 0; render(); say('Guide closed. The help button is always on the board.'); break;
       case 'settings': settings(); break;
       case 'help': helpStep = 0; help(); break;
       case 'vault-help': helpStep = 3; help(); break;
@@ -420,10 +449,15 @@
       case 'request-prev': requestIndex = (requestIndex + 2) % 3; renderPlay(); break;
       case 'request-next': requestIndex = (requestIndex + 1) % 3; renderPlay(); break;
       case 'deliver-book': if (!state.board.includes(null)) say('Your board is full. Merge a pair or return an unwanted item.'); else acquisitions(); break;
+      case 'buy-arrival':
       case 'acquire-book': {
-        rememberBoard(); const result=E.spawnBook(state,data.section);
-        if(!result.ok){undoState=null;closeModal();say('Your board is full. Merge a pair or return an unwanted item.');return;}
-        popCell=result.index;selected=-1;closeModal();commit();sound();say(E.section(result.section).name+' delivery. Level '+result.tier+'.');break;
+        rememberBoard(); const result=E.buyBook(state,action==='buy-arrival'?null:data.section);
+        if(!result.ok){undoState=null;const message=result.reason==='funds'?'You need '+result.price+' funds for that book.':result.reason==='locked'?'Open that collection before ordering from it.':'Your board is full. Merge a pair or return an unwanted item.';closeModal();say(message);return;}
+        popCell=result.index;selected=-1;closeModal();commit();sound();say(E.section(result.section).name+' arrival. Level '+result.tier+'. '+result.price+' funds spent.');break;
+      }
+      case 'unlock-section': {
+        if(!E.buySection(state,data.section)){say('That collection cannot be opened yet.');return;}
+        clearUndo();commit();sound('win');acquisitions();say(E.section(data.section).name+' is now open for orders.');break;
       }
       case 'pantry': {
         const id = state.requests[requestIndex].recipe;
@@ -436,8 +470,13 @@
       case 'recipe-details': recipeTab = 0; recipeModal(Number(data.index), false); break;
       case 'stock-recipe': {
         rememberBoard(); const result = E.stockRecipe(state, C.recipes[pantryIndex].id);
-        if (!result.ok) { undoState = null; const needed=E.recipe(C.recipes[pantryIndex].id).components.length;showModal(`${modalHead(needed+' empty spaces needed')}<p class="modal-copy">${result.reason === 'locked' ? 'That preparation is not unlocked yet.' : 'This pantry delivery contains '+needed+' real components. Clear enough board spaces first, then assemble them in any order.'}</p><button class="btn primary block" data-action="close">Back to the board</button>`); return; }
-        selected = -1; popCell = result.indices[0]; closeModal(); commit(); sound(); break;
+        if (!result.ok) { undoState = null; const needed=E.recipe(C.recipes[pantryIndex].id).components.length;const title=result.reason==='funds'?'More funds needed':result.reason==='locked'?'Recipe card needed':needed+' empty spaces needed';const copy=result.reason==='funds'?'Fresh stock costs '+result.price+' funds. Complete a basic visitor request first.':result.reason==='locked'?'Research that recipe card before ordering its ingredients.':'This pantry delivery contains '+needed+' real components. Clear enough board spaces first, then assemble them in any order.';showModal(`${modalHead(title)}<p class="modal-copy">${copy}</p><button class="btn primary block" data-action="close">Back to the board</button>`); return; }
+        selected = -1; popCell = result.indices[0]; closeModal(); commit(); sound(); say(result.price+' funds spent on fresh stock. No mysterious infinite cheese cupboard.'); break;
+      }
+      case 'buy-recipe': {
+        const recipe=C.recipes[pantryIndex];
+        if(!E.buyRecipe(state,recipe.id)){say('That recipe card cannot be researched yet.');return;}
+        clearUndo();commit();sound('win');recipeModal(pantryIndex,true);say(recipe.short+' added to the pantry.');break;
       }
       case 'swap': swapMode = !swapMode; renderPlay(); if (swapMode) say('Tap another space to move or swap. Matching items will still combine.'); break;
       case 'selected-info': itemInfo(state.board[selected]); break;
@@ -452,8 +491,10 @@
       case 'undo': if (undoState) { state = E.copy(undoState); undoState = null; selected = -1; commit(); say('Last board action undone.'); } break;
       case 'serve': {
         const result = E.serve(state, requestIndex); if (!result.ok) return;
+        if (tutorialStep === 3) tutorialStep = 4;
         clearUndo(); selected = -1; commit(); confetti(); sound('win');
-        say(result.newRecipes.length ? `+${result.coins} funds. ${result.newRecipes[0].short} is now in the pantry.` : `+${result.coins} funds. ${state.served % 5 === 0 ? C.reactions.serve[state.served % C.reactions.serve.length] : C.visitors[result.visitor].name + '’s request is complete.'}`);
+        const newlyAvailable=C.recipes.find(r=>!state.unlockedRecipes.includes(r.id)&&r.unlock===state.served);
+        say(`+${result.coins} funds. ${newlyAvailable ? newlyAvailable.short+' can now be researched.' : state.served % 5 === 0 ? C.reactions.serve[state.served % C.reactions.serve.length] : C.visitors[result.visitor].name + '’s request is complete.'}`);
         break;
       }
       case 'upgrade-prev': upgradeIndex = (upgradeIndex + C.upgrades.length - 1) % C.upgrades.length; renderLibrary(); break;
@@ -466,7 +507,7 @@
         break;
       }
       case 'theme': if (state.upgrades.includes('plants') && ['teal','sea-glass','midnight'].includes(data.theme)) { state.theme = data.theme; clearUndo(); commit(); } break;
-      case 'room-info': showModal(`${modalHead('A library, not a shift')}<p class="modal-copy">Your library changes through sixteen visible improvements: deeper shelves, a bindery, catalogue, listening alcove and the properly serious cheese dresser.</p><p class="modal-copy">Books remain free to borrow. Visitor donations and fundraising tastings support the improvements. No wages, rent, spoilage or unhappy queues to manage.</p><button class="btn secondary block" data-action="close">Back to my library</button>`); break;
+      case 'room-info': showModal(`${modalHead('A library, not a shift')}<p class="modal-copy">Your library changes through sixteen visible improvements: deeper shelves, a bindery, catalogue, listening alcove and the properly serious cheese dresser.</p><p class="modal-copy">Visitor funds pay for stock, new collections, recipe research and improvements. Books remain free to borrow; there are no wages, spoilage or miserable queues to manage.</p><button class="btn secondary block" data-action="close">Back to my library</button>`); break;
       case 'daily': showDaily(); break;
       case 'claim-daily': if (E.claimDaily(state)) { clearUndo(); commit(); closeModal(); sound('win'); say('75 extra funds. Three favours, nicely done.'); } break;
       case 'journal-tab': if (['recipes','books','achievements','people'].includes(data.tab)) { journalTab = data.tab; journalIndex = 0; renderJournal(); } break;
@@ -478,12 +519,11 @@
         const line = v.lines[Math.min(3, Math.floor(state.visits[index] / 3))];
         showModal(`${modalHead(v.name)}<div class="help-art">${A.visitor(index)}</div><p class="eyebrow">${escape(v.role)}</p><p class="modal-copy">“${escape(line)}”</p><p class="modal-note">${state.visits[index]} request${state.visits[index] === 1 ? '' : 's'} completed. The regulars have more to say as you get to know them.</p><button class="btn secondary block" data-action="close">Back to the shelves</button>`); break;
       }
-      case 'vault-mode': if (['daily','practice'].includes(data.mode)) { vaultMode = data.mode; activeWord = 0; clearUndo(); renderVault(); } break;
-      case 'word-focus': activeWord = Number(data.index) === 1 ? 1 : 0; renderVault(); break;
+      case 'vault-mode': if (['daily','practice'].includes(data.mode)) { vaultMode = data.mode; clearUndo(); renderVault(); } break;
       case 'key': keyInput(data.key); break;
       case 'puzzle-result': puzzleResult(); break;
       case 'new-practice': nextPractice(); break;
-      case 'abandon-practice': showModal(`${modalHead('Try a different pair?')}<p class="modal-copy">This replaces the current practice puzzle. Your daily archive and library progress are untouched.</p><div class="modal-actions"><button class="btn ghost" data-action="close">Keep this pair</button><button class="btn primary" data-action="new-practice">New pair</button></div>`); break;
+      case 'abandon-practice': showModal(`${modalHead('Try a different word?')}<p class="modal-copy">This replaces the current practice puzzle. Your daily archive and library progress are untouched.</p><div class="modal-actions"><button class="btn ghost" data-action="close">Keep this word</button><button class="btn primary" data-action="new-practice">New word</button></div>`); break;
       case 'toggle-setting': if (['sound','motion','contrast'].includes(data.setting)) { clearUndo(); state.settings[data.setting] = !state.settings[data.setting]; commit(); settings(); if (data.setting === 'sound') sound('merge'); } break;
       case 'backup': backup(); break;
       case 'export': download(`shelf-life-${E.dateKey()}.json`, S.encode(state)); say('Save file prepared. Keep it somewhere safe.'); break;
@@ -493,14 +533,14 @@
         catch (error) { showModal(`${modalHead('No previous save')}<p class="modal-copy">${escape(error.message)}</p><button class="btn secondary block" data-action="backup">Back to backups</button>`); }
         break;
       }
-      case 'confirm-import': if (pendingImport) { state = pendingImport; pendingImport = null; state.started = true; clearUndo(); selected = -1; page = 'play'; modalDismissable = true; closeModal(); commit({force:true}); say('Your library is back where it belongs.'); } break;
+      case 'confirm-import': if (pendingImport) { state = pendingImport; pendingImport = null; state.started = true; tutorialStep=0; clearUndo(); selected = -1; page = 'play'; modalDismissable = true; closeModal(); commit({force:true}); say('Your library is back where it belongs.'); } break;
       case 'export-raw': download(`shelf-life-unreadable-${E.dateKey()}.json`, store.raw() || '{}'); break;
       case 'recover-backup': modalDismissable = true; closeModal(); state.started = true; commit({force:true}); say('Previous valid save restored.'); break;
       case 'recovery-new': showModal(`${modalHead('Start a new library?', 'recovery')}<p class="modal-copy">This replaces the unreadable current save. Keep a copy first if you may need to recover it later.</p><div class="modal-actions"><button class="btn ghost" data-action="recovery">Go back</button><button class="btn danger" data-action="reset-now">Start again</button></div>`); break;
       case 'recovery': recovery(); break;
       case 'reset-confirm': showModal(`${modalHead('Start the library again?')}<p class="modal-copy">This clears your current board, funds, improvements, puzzle progress and collections in this browser. Export a backup first to keep them.</p><div class="stack"><button class="btn secondary block" data-action="export">Export my current save first</button><button class="btn danger block" data-action="reset-now">Yes, start a new library</button><button class="btn ghost block" data-action="settings">Keep my progress</button></div>`); break;
-      case 'reset-now': state = E.fresh(seed ^ E.hash(String(Date.now()))); selected = -1; requestIndex = 0; clearUndo(); page = 'play'; modalDismissable = true; closeModal(); commit({force:true}); welcome(); break;
-      case 'about': showModal(`${modalHead('Shelf Life')}<p class="modal-copy">Made for Lou: a personal game about serious shelves, proper cheese, difficult words and records after closing.</p><p class="modal-copy">All gameplay runs on your device. No analytics, adverts, accounts, purchases or background earnings. Opening a recipe source is the only optional trip to another website.</p><p class="modal-copy">Lou is original cel-shaded vector artwork based on the supplied description: recognisable, expressive and deliberately illustrated rather than photographic. Her reference photograph is not included. The offline guess list uses CMUdict; targets are separately curated.</p><a class="small" href="data/WORDLIST-LICENCE.txt" target="_blank" rel="noopener noreferrer">Word-list attribution & licence ↗</a><button class="btn secondary block" data-action="settings">Back to settings</button>`); break;
+      case 'reset-now': state = E.fresh(seed ^ E.hash(String(Date.now()))); selected = -1; requestIndex = 0; tutorialStep=0; clearUndo(); page = 'play'; modalDismissable = true; closeModal(); commit({force:true}); welcome(); break;
+      case 'about': showModal(`${modalHead('Shelf Life')}<p class="modal-copy">Made for Lou: a personal game about serious shelves, proper cheese, good words and records after closing.</p><p class="modal-copy">All gameplay runs on your device. No analytics, adverts, accounts, purchases or background earnings. Opening a recipe source is the only optional trip to another website.</p><p class="modal-copy">Lou is original cel-shaded vector artwork based on the supplied description: recognisable, expressive and deliberately illustrated rather than photographic. Her reference photograph is not included. The offline guess list uses CMUdict; targets are separately curated.</p><a class="small" href="data/WORDLIST-LICENCE.txt" target="_blank" rel="noopener noreferrer">Word-list attribution & licence ↗</a><button class="btn secondary block" data-action="settings">Back to settings</button>`); break;
       case 'update-app': if (updateWorker) { save(); reloadForUpdate = true; updateWorker.postMessage({type:'SKIP_WAITING'}); } break;
       default: break;
     }
@@ -613,7 +653,7 @@
   render();
   if(loaded.error) recovery(); else if(!state.started) welcome();
   // Read-only diagnostics for automated browser tests and maintenance.
-  window.SHELF_APP=Object.freeze({snapshot:()=>E.copy(state),page:()=>page,version:'1.1.0'});
+  window.SHELF_APP=Object.freeze({snapshot:()=>E.copy(state),page:()=>page,version:'1.2.0'});
   if('serviceWorker' in navigator && location.protocol!=='file:') {
     let reloading=false;
     navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloadForUpdate&&!reloading){reloading=true;location.reload();}});

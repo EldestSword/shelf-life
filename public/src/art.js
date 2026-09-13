@@ -90,9 +90,22 @@ function ingredientArt(item){
  const shapes={
    cheese:`<path d="M10 43l11-24 30 9v23H10z" fill="#e6bd63"/><path d="M21 19l30 9-22 8-19 7z" fill="#f5d781"/><circle cx="35" cy="40" r="3" fill="#b98a3f"/><circle cx="45" cy="33" r="2" fill="#c49649"/>`,
    fruit:`<path d="M12 42q17-29 39 0-5 13-19 13T12 42z" fill="#cb5b62"/><path d="M18 40q14-18 27 0" fill="none" stroke="#ffd5a4" stroke-width="8"/><path d="M31 21q1-8 8-10" stroke="#5d8c65" stroke-width="4"/>`,
+   berry:`<g fill="#76508c"><circle cx="23" cy="34" r="9"/><circle cx="36" cy="30" r="9"/><circle cx="42" cy="42" r="9"/><circle cx="28" cy="45" r="9"/></g><path d="M30 23q5-9 13-9" stroke="#6e9a64" stroke-width="4"/>`,
+   cake:`<path d="M13 28h38v25H13z" fill="#d9b76d"/><path d="M13 28q19-13 38 0" fill="#efe4c2"/><path d="M18 39h28" stroke="#aa5261" stroke-width="5"/>`,
    potato:`<ellipse cx="32" cy="37" rx="21" ry="15" fill="#b8895d"/><circle cx="22" cy="34" r="2" fill="#775337"/><circle cx="39" cy="41" r="2" fill="#775337"/>`,
    pickle:`<path d="M16 22q16-8 31 1v27q-15 8-31 0z" fill="#62885d"/><path d="M20 25q12-5 23 0" stroke="#afd184" stroke-width="3"/><circle cx="25" cy="37" r="2" fill="#d4d98a"/><circle cx="39" cy="43" r="2" fill="#d4d98a"/>`,
    bread:`<path d="M13 48V29q1-15 18-10 15-7 20 8v21z" fill="#c99152"/><path d="M18 44V30q1-9 13-6 11-4 15 5v15z" fill="#f0c77b"/>`,
+   corn:`<path d="M31 13q15 9 10 34-5 13-13 7-11-17-5-36z" fill="#e0b13f"/><path d="M22 28q-9 8-5 25 10-2 15-12m10-13q9 8 4 25-8-2-12-10" fill="#5d8b59"/>`,
+   vegetable:`<path d="M15 35q4-17 17-17t17 17q0 20-17 20T15 35z" fill="#7c9f55"/><path d="M32 20q-5-9 2-13m-2 12q9-8 14-3" stroke="#a6c07d" stroke-width="4"/>`,
+   meat:`<path d="M13 40q5-21 24-20 18 3 13 21-8 16-25 13-15-2-12-14z" fill="#a85e55"/><ellipse cx="38" cy="35" rx="7" ry="9" fill="#efd5b7"/>`,
+   herb:`<path d="M32 55V15m0 19q-16-16-20-4 5 13 20 13m0-15q14-18 21-8-1 14-21 17" fill="#6c9b68" stroke="#47764f" stroke-width="2"/>`,
+   crumbs:`<path d="M13 45q18-26 38 0-2 11-19 11T13 45z" fill="#bc8a4c"/><g fill="#efd099"><circle cx="23" cy="39" r="3"/><circle cx="34" cy="30" r="3"/><circle cx="43" cy="42" r="3"/></g>`,
+   pastry:`<path d="M12 43q5-23 20-25 16 3 20 25-4 12-20 12T12 43z" fill="#d6a253"/><path d="M19 39q13-14 26 0m-22-8 18 14" fill="none" stroke="#f0ce87" stroke-width="4"/>`,
+   sugar:`<path d="M16 23h32l-5 33H21z" fill="#ede6d6"/><path d="M20 29h24" stroke="#ffffff" stroke-width="5"/><circle cx="27" cy="40" r="2" fill="#b8d1cc"/><circle cx="37" cy="45" r="2" fill="#b8d1cc"/>`,
+   nut:`<path d="M19 47q-3-24 13-32 16 8 13 32-4 10-13 10T19 47z" fill="#9b663f"/><path d="M32 19v33m-9-21 18 9" stroke="#d29a63" stroke-width="3"/>`,
+   pasta:`<g fill="none" stroke="#e2bd62" stroke-width="5" stroke-linecap="round"><path d="M11 24q12-12 22 1t20-1"/><path d="M11 36q12-12 22 1t20-1"/><path d="M11 48q12-12 22 1t20-1"/></g>`,
+   yam:`<path d="M13 38q6-23 26-21 17 7 10 25-7 17-25 12-14-3-11-16z" fill="#9d694d"/><path d="M20 32q12-7 23 5" fill="none" stroke="#cb9574" stroke-width="3"/>`,
+   chilli:`<path d="M15 23q28 0 34 12-9 19-35 17 19-7 1-29z" fill="#c65243"/><path d="M16 24q-5-7-1-12" stroke="#6d9658" stroke-width="5"/>`,
    seaweed:`<path d="M16 50q-5-17 8-29 5 11 8 28m0 0q-4-23 11-34 8 18 4 35z" fill="#315b4c"/><path d="M24 26q8 8 18 15" stroke="#7da579" stroke-width="3"/>`,
    butter:`<rect x="13" y="26" width="38" height="25" rx="5" fill="#e9c864"/><path d="M17 30h30v5H17z" fill="#fff0a5" opacity=".7"/>`,
    mustard:`<path d="M20 20h24l4 34H16z" fill="#bd8f28"/><rect x="22" y="29" width="20" height="15" rx="3" fill="#f0ca58"/><path d="M24 18h16" stroke="#eee0ae" stroke-width="5"/>`,
@@ -122,7 +135,16 @@ function prepArt(item){
 }
 function dishArt(id){
  const n=C.recipes.findIndex(r=>r.id===id),a=`hsl(${(n*41+34)%360} 48% 59%)`,b=`hsl(${(n*41+67)%360} 55% 72%)`;
- const food=[`<path d="M15 40l14-22 19 23z" fill="${a}"/><path d="M29 18l19 23-13-7-20 6z" fill="${b}"/>`,`<rect x="17" y="23" width="29" height="20" rx="5" fill="${a}"/><circle cx="25" cy="30" r="2" fill="#5b4135"/><circle cx="38" cy="36" r="2" fill="#5b4135"/>`,`<path d="M14 39q17-17 36 0" fill="none" stroke="${a}" stroke-width="11"/><circle cx="25" cy="34" r="4" fill="${b}"/>`][n%3];
+ const food=[
+  `<path d="M15 40l14-22 19 23z" fill="${a}"/><path d="M29 18l19 23-13-7-20 6z" fill="${b}"/>`,
+  `<rect x="17" y="23" width="29" height="20" rx="5" fill="${a}"/><circle cx="25" cy="30" r="2" fill="#5b4135"/><circle cx="38" cy="36" r="2" fill="#5b4135"/>`,
+  `<path d="M14 39q17-17 36 0" fill="none" stroke="${a}" stroke-width="11"/><circle cx="25" cy="34" r="4" fill="${b}"/>`,
+  `<path d="M15 29h34l-5 20H20z" fill="${a}"/><path d="M20 29q12-15 24 0" fill="${b}"/><path d="M25 23q7-8 14 0" fill="none" stroke="#f4df9b" stroke-width="3"/>`,
+  `<g fill="${a}"><circle cx="22" cy="36" r="9"/><circle cx="34" cy="31" r="9"/><circle cx="43" cy="39" r="9"/></g><path d="M19 34q16-9 27 5" fill="none" stroke="${b}" stroke-width="4"/>`,
+  `<path d="M14 42q4-22 18-23 15 2 19 23-3 9-19 9t-18-9z" fill="${a}"/><path d="M20 35q12-11 24 0" fill="none" stroke="${b}" stroke-width="5"/>`,
+  `<path d="M16 44q1-25 16-25t16 25z" fill="${a}"/><path d="M21 39q11-14 22 0" fill="none" stroke="#f4df9b" stroke-width="4"/><circle cx="32" cy="28" r="4" fill="${b}"/>`,
+  `<g fill="none" stroke="${a}" stroke-width="6" stroke-linecap="round"><path d="M16 29q10-10 18 1t15-1"/><path d="M15 39q11-9 19 1t15-1"/></g><path d="M20 45h25" stroke="${b}" stroke-width="4"/>`
+ ][n%8];
  return svg('64 64',scopePaints(`<defs><filter id="ds"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-opacity=".45"/></filter></defs><g filter="url(#ds)"><ellipse cx="32" cy="45" rx="27" ry="11" fill="#d7e3dc"/><ellipse cx="32" cy="43" rx="21" ry="7" fill="#203f3b"/>${food}<path d="M12 47q20 10 40 0" fill="none" stroke="#aa9059" stroke-width="2"/></g>`,['ds']),'item-art dish-art');
 }
 function item(i){if(!i)return '';if(i.kind==='book')return book(i.tier,i.section);if(i.kind==='ingredient')return ingredientArt(i);if(i.kind==='prep')return prepArt(i);if(i.kind==='cheese')return ingredientArt({kind:'ingredient',id:i.id,component:recipe(i.id).components[0].id});return dishArt(i.id);}
