@@ -1,0 +1,16 @@
+{
+  "name": "shelf-life-lous-library",
+  "version": "1.2.0",
+  "private": true,
+  "description": "A personal mobile-browser game for Lou: a library economy, authentic cheese cooking and a daily seven-letter word.",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "node scripts/serve.cjs",
+    "start": "node scripts/serve.cjs",
+    "test": "node --test tests/*.test.cjs",
+    "check": "node scripts/check.cjs",
+    "test:browser": "python tests/browser_smoke.py",
+    "package": "python scripts/package.py"
+  }
+}
