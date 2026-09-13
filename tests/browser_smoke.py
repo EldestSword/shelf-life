@@ -1,5 +1,5 @@
 """Real browser acceptance: two engines, two phone sizes, all four screens and game flows."""
-import json, os, pathlib, subprocess, time, urllib.request
+import json, os, pathlib, re, subprocess, time, urllib.request
 from playwright.sync_api import sync_playwright
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
@@ -75,14 +75,14 @@ try:
                 act(page,'need-info',kind='book');close(page)
                 # A full merge, undo, re-merge, cheese preparation and visitor service, all through controls.
                 act(page,'tile',index=0);act(page,'tile',index=1)
-                expect(snap(page)['board'][1]=={'kind':'book','tier':2},'Book merge failed')
+                expect(snap(page)['board'][1]=={'kind':'book','tier':2,'section':'fiction'},'Book merge failed')
                 act(page,'undo');expect(snap(page)['board'][0]['tier']==1,'Undo failed')
                 act(page,'tile',index=0);act(page,'tile',index=1)
                 act(page,'tile',index=5);act(page,'tile',index=6)
                 expect(snap(page)['board'][6]=={'kind':'dish','id':'manchego'},'Cheese preparation failed')
                 act(page,'serve');expect(snap(page)['served']==1,'Visitor not served')
                 expect(snap(page)['funds']==128,'Visitor reward incorrect')
-                act(page,'deliver-book');expect(any(x and x['kind']=='book' and x['tier']==1 for x in snap(page)['board']),'Donation missing')
+                act(page,'deliver-book');act(page,'acquire-book',section='history');expect(any(x and x['kind']=='book' and x['section']=='history' for x in snap(page)['board']),'Section donation missing')
                 for screen in ['play','library','vault','journal']:
                     nav(page,screen);fits(page,f'{engine} {width} {screen}')
                     shot(page,OUT/f'{engine}-{width}-{screen}.png')
@@ -92,7 +92,7 @@ try:
                 with page.expect_download() as pending: act(page,'export')
                 download=pending.value;dest=OUT/f'{engine}-{width}-backup.json';download.save_as(dest)
                 data=dest.read_text(encoding='utf-8');expect(json.loads(data)['state']==before,'Export differs from current save')
-                close(page);nav(page,'play');act(page,'deliver-book');import_save(page,data)
+                close(page);nav(page,'play');act(page,'deliver-book');act(page,'acquire-book',section='poetry');import_save(page,data)
                 expect(snap(page)==before,'Import round trip changed state')
                 page.reload();page.wait_for_function('()=>(window.SHELF_APP)');expect(snap(page)==before,'Reload lost state')
                 # Malformed imports leave the library unchanged.
@@ -102,7 +102,7 @@ try:
                 expect(snap(page)==before,'Bad import overwrote state');close(page)
                 # Touch pantry and every recipe page; long content stays within the modal.
                 nav(page,'play');act(page,'pantry')
-                for _ in range(10):
+                for _ in range(page.evaluate('SHELF_CONTENT.recipes.length')):
                     for tab in [1,2,0]:act(page,'recipe-tab',index=tab)
                     act(page,'pantry-next')
                 act(page,'stock-recipe');expect(len([x for x in snap(page)['board'] if x])>=2,'Pantry delivery failed')
@@ -110,26 +110,41 @@ try:
                 rich=fixture(page,funds=100000,served=60,daily={'date':page.evaluate('SHELF_ENGINE.dateKey()'),'served':3,'claimed':False})
                 import_save(page,rich)
                 act(page,'daily');act(page,'claim-daily');expect(snap(page)['funds']==100075,'Daily reward failed')
+                # The late-game seven-component preparation is assembled through real taps.
+                nav(page,'play');act(page,'pantry');act(page,'pantry-prev')
+                expect(page.get_by_text('7 COMPONENTS').is_visible(),'Advanced preparation complexity missing')
+                act(page,'stock-recipe')
+                rarebit=[i for i,x in enumerate(snap(page)['board']) if x and x.get('id')=='rarebit']
+                expect(len(rarebit)==7,'Seven-component pantry delivery incomplete')
+                assembly=rarebit[0]
+                for nxt in rarebit[1:]:act(page,'tile',index=assembly);act(page,'tile',index=nxt);assembly=nxt
+                expect(snap(page)['board'][assembly]=={'kind':'dish','id':'rarebit'},'Seven-component preparation failed')
                 nav(page,'library');act(page,'room-info');close(page)
                 room_versions=[]
                 act(page,'upgrade-next');act(page,'upgrade-prev')
-                for i in range(12):
+                upgrade_count=page.evaluate('SHELF_CONTENT.upgrades.length')
+                for i in range(upgrade_count):
                     fits(page,f'{engine} {width} upgrade {i}')
-                    room_versions.append(page.locator('.library-scene .room-art').inner_html())
+                    room_html=page.locator('.library-scene .room-art').inner_html()
+                    room_html=re.sub(r's\d+-','s-',room_html)
+                    room_html=re.sub(r'data-upgrades="[^"]*"','data-upgrades=""',room_html)
+                    room_versions.append(room_html)
                     act(page,'buy');close(page)
-                    if i<11:act(page,'upgrade-next')
-                expect(len(set(room_versions))==12,'Upgrades did not each change the room')
-                expect(len(snap(page)['upgrades'])==12,'Upgrades not purchased')
-                for theme in ['rose','twilight','sage']:act(page,'theme',theme=theme);expect(snap(page)['theme']==theme,'Palette did not change')
+                    if i<upgrade_count-1:act(page,'upgrade-next')
+                expect(len(set(room_versions))==upgrade_count,'Upgrades did not each change the room')
+                expect(len(snap(page)['upgrades'])==upgrade_count,'Upgrades not purchased')
+                for theme in ['sea-glass','midnight','teal']:act(page,'theme',theme=theme);expect(snap(page)['theme']==theme,'Palette did not change')
                 shot(page,OUT/f'{engine}-{width}-complete-library.png')
                 nav(page,'journal')
-                for i in range(10):
+                for i in range(page.evaluate('SHELF_CONTENT.recipes.length')):
                     fits(page,f'{engine} {width} recipe {i}')
                     act(page,'recipe-details',index=i)
                     for tab in [1,2,0]:act(page,'recipe-tab',index=tab)
                     close(page);act(page,'journal-next')
+                act(page,'journal-tab',tab='books')
+                for i in range(page.evaluate('SHELF_CONTENT.sections.length')):fits(page,f'{engine} {width} catalogue {i}');act(page,'journal-next')
                 act(page,'journal-tab',tab='people')
-                for i in range(8):fits(page,f'{engine} {width} visitor {i}');act(page,'journal-next')
+                for i in range(page.evaluate('SHELF_CONTENT.visitors.length')):fits(page,f'{engine} {width} visitor {i}');act(page,'journal-next')
                 act(page,'journal-tab',tab='achievements')
                 for i in range(3):
                     fits(page,f'{engine} {width} milestone {i}')
@@ -209,8 +224,8 @@ try:
             b=ctx.new_page();b.goto(URL);b.wait_for_function('()=>(window.SHELF_APP)')
             count=lambda page:len([x for x in snap(page)['board'] if x])
             original=count(a)
-            a.evaluate('document.querySelector("[data-action=deliver-book]").click()')
-            b.evaluate('document.querySelector("[data-action=deliver-book]").click()')
+            a.evaluate('document.querySelector("[data-action=deliver-book]").click()');act(a,'acquire-book',section='fiction')
+            b.evaluate('document.querySelector("[data-action=deliver-book]").click()');act(b,'acquire-book',section='poetry')
             a.wait_for_function('(n)=>SHELF_APP.snapshot().board.filter(Boolean).length===n',arg=original+2)
             b.wait_for_function('(n)=>SHELF_APP.snapshot().board.filter(Boolean).length===n',arg=original+2)
             expect(snap(a)==snap(b),'Tabs diverged')
