@@ -16,7 +16,7 @@ function fresh(seed=839021,day=dateKey()){
  s.board[5]={kind:'ingredient',id:'manchego',component:'manchego'};s.board[6]={kind:'ingredient',id:'manchego',component:'membrillo'};
  s.board[10]={kind:'book',tier:2,section:'essays'};s.board[11]={kind:'book',tier:1,section:'fiction'};
  s.catalogued=['fiction:1','essays:2'];
- s.requests=[{visitor:0,tier:2,section:'fiction',recipe:'manchego',serial:0},{visitor:1,tier:2,section:'essays',recipe:null,serial:1},{visitor:2,tier:3,section:'poetry',recipe:'wensleydale',serial:2}];s.orderIndex=3;return s;
+ s.requests=[{visitor:0,tier:2,section:'fiction',recipe:'manchego',serial:0},{visitor:1,tier:2,section:'essays',recipe:null,serial:1},{visitor:2,tier:3,section:'essays',recipe:'wensleydale',serial:2}];s.orderIndex=3;return s;
 }
 function rawComponents(i){
  const r=recipe(i?.id);if(!r)return null;
@@ -75,6 +75,14 @@ function validate(x){
  const inferredRecipes=[...new Set(['manchego','wensleydale',...s.board.filter(i=>i&&i.kind!=='book').map(i=>i.id),...s.requests.map(r=>r.recipe).filter(Boolean),...s.discovered])];
  for(const [key,allowed,fallback] of [['unlockedSections',sectionIds,inferredSections],['unlockedRecipes',recipeIds,inferredRecipes]]){const values=x[key]??fallback;if(!Array.isArray(values)||values.some(v=>!allowed.includes(v))||new Set(values).size!==values.length)throw Error('The save has invalid unlocked content.');s[key]=values.slice();}
  if(!s.unlockedSections.includes('fiction')||!s.unlockedSections.includes('essays')||!s.unlockedRecipes.includes('manchego')||!s.unlockedRecipes.includes('wensleydale'))throw Error('The save is missing its starter content.');
+ s.requests=s.requests.map((q,slot)=>{
+  const preferred=C.visitors[q.visitor].sections.filter(id=>s.unlockedSections.includes(id));
+  const choices=preferred.length?preferred:s.unlockedSections;
+  const sectionId=s.unlockedSections.includes(q.section)?q.section:choices[Math.floor(random(s)*choices.length)];
+  const available=unlocked(s);
+  const recipeId=q.recipe&&!s.unlockedRecipes.includes(q.recipe)?(slot===1?null:available[Math.floor(random(s)*available.length)].id):q.recipe;
+  return {...q,section:sectionId,recipe:recipeId};
+ });
  if(!Array.isArray(x.visits)||![8,C.visitors.length].includes(x.visits.length)||!x.visits.every(v=>Number.isSafeInteger(v)&&v>=0&&v<=100000000))throw Error('The visitor record is invalid.');s.visits=Array.from({length:C.visitors.length},(_,i)=>x.visits[i]||0);
  if(!x.daily||!/^\d{4}-\d{2}-\d{2}$/.test(x.daily.date)||!Number.isSafeInteger(x.daily.served)||x.daily.served<0||x.daily.served>100000000||typeof x.daily.claimed!=='boolean')throw Error('The daily record is invalid.');s.daily={date:x.daily.date,served:x.daily.served,claimed:x.daily.claimed};
  s.dailyPuzzle=validatePuzzle(x.dailyPuzzle);s.practicePuzzle=validatePuzzle(x.practicePuzzle);
